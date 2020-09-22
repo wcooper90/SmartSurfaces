@@ -89,6 +89,25 @@ def percent_green():
         print("Image " + file + " is %" + str(round(green_percentage, 2)) + " green. ")
 
 
+def find_roofs():
+
+    for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
+        im = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
+        hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+
+        ## mask of green (36,25,25) ~ (86, 255,255)
+        # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
+        # can be changed depending on the environment
+        mask = cv2.inRange(hsv, (0, 5, 100), (179, 50, 255))
+
+        ## slice the green
+        imask = mask>0
+        gray = np.zeros_like(im, np.uint8)
+        gray[imask] = im[imask]
+
+        ## save
+        cv2.imwrite(UserInputs.GRAY_IMG_PATH + file, gray)
+
 def albedo():
 
     return 0
@@ -99,6 +118,8 @@ if __name__ == '__main__':
     print("____________IMAGES INITIALIZED____________")
     # find_green()
     print("____________GREEN IMAGES FOUND____________")
+    find_roofs()
+    print("_____________GRAY IMAGES FOUND____________")
     # find_contours()
     print("_____________CONTOURS CAPTURED____________")
-    percent_green()
+    # percent_green()

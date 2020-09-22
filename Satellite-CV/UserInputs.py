@@ -13,6 +13,7 @@ class UserInputs():
     CROPPED_IMG_PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/images/cropped/'
     GREEN_IMG_PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/images/green/'
     CONTOURS_IMG_PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/images/contours/'
+    GRAY_IMG_PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/images/gray/'
     DEFAULT_HEIGHT = 500
     DEFAULT_WIDTH = 500
     DEFAULT_IMAGE_TYPE = '.PNG'

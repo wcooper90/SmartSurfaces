@@ -1,0 +1,5 @@
+create an analysis class - initialize with a photo,
+number of contours, green/trees/albedo/roofs/etc..
+
+create functions within the class to calculate each of these things from
+the initial values. 

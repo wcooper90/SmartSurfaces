@@ -24,7 +24,7 @@ def crop_images():
         im1 = im.crop((left, top, right, bottom))
         im1.save(UserInputs.CROPPED_IMG_PATH + file)
 
-# find the contours of all the images
+# find the green in all images
 def find_green():
     for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
         im = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
@@ -44,6 +44,7 @@ def find_green():
         cv2.imwrite(UserInputs.GREEN_IMG_PATH + file, green)
 
 
+# find the contours in all images (to be used for finding roofs later)
 def find_contours():
     for i, file in enumerate(os.listdir(UserInputs.GREEN_IMG_PATH)):
         im = cv2.imread(UserInputs.GREEN_IMG_PATH + file)
@@ -71,6 +72,7 @@ def find_contours():
         cv2.imwrite(UserInputs.CONTOURS_IMG_PATH + file, img)
 
 
+# calculate the percentage of green pixels in individual images
 def percent_green():
     for i, file in enumerate(os.listdir(UserInputs.GREEN_IMG_PATH)):
         im = np.asarray(Image.open(UserInputs.GREEN_IMG_PATH + file))
@@ -89,6 +91,7 @@ def percent_green():
         print("Image " + file + " is %" + str(round(green_percentage, 2)) + " green. ")
 
 
+# find the and create images with only the roofs of images
 def find_roofs():
 
     for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
@@ -108,11 +111,14 @@ def find_roofs():
         ## save
         cv2.imwrite(UserInputs.GRAY_IMG_PATH + file, gray)
 
+
+# calculate the albedo of an image (LANDSAT strategy)
 def albedo():
 
     return 0
 
 
+# main function 
 if __name__ == '__main__':
     # crop_images()
     print("____________IMAGES INITIALIZED____________")

@@ -1,5 +1,10 @@
-create an analysis class - initialize with a photo,
-number of contours, green/trees/albedo/roofs/etc..
-
-create functions within the class to calculate each of these things from
-the initial values. 
+ - be able to calculate albedo of an image
+ - randomly select multiple areas within city boundaries for
+    Google Earth API to be able to return images for
+ - in outputs, create file which makes a pandas dataframe/excel file which
+    consists of cities, along with their final statistics, with confidence
+    intervals
+ - continue tweaking opencv to be able to detect roofs (color & shape)
+ - documentation
+ - figure out Google Earth API
+ - create the formal Image class 

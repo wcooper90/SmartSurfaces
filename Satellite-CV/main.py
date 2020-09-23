@@ -4,9 +4,10 @@ import numpy as np
 import ee
 import os
 import random, sys
-from inputs.image import Image
+from inputs.image import LandChunk
 from UserInputs import UserInputs
 from PIL import Image
+from outputs.dataframe import DF
 
 
 # crop initial images from Google Earth to make sure they are all the same size
@@ -118,14 +119,14 @@ def albedo():
     return 0
 
 
-# main function 
+# main function
 if __name__ == '__main__':
     # crop_images()
     print("____________IMAGES INITIALIZED____________")
     # find_green()
     print("____________GREEN IMAGES FOUND____________")
-    find_roofs()
-    print("_____________GRAY IMAGES FOUND____________")
+    # find_roofs()
+    print("_____________ROOF AREAS FOUND_____________")
     # find_contours()
     print("_____________CONTOURS CAPTURED____________")
     # percent_green()

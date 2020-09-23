@@ -17,3 +17,4 @@ class UserInputs():
     DEFAULT_HEIGHT = 500
     DEFAULT_WIDTH = 500
     DEFAULT_IMAGE_TYPE = '.PNG'
+    DEFAULT_SCRAPING_URL = 'https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population'

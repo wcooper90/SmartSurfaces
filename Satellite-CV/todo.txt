@@ -7,4 +7,5 @@
  - continue tweaking opencv to be able to detect roofs (color & shape)
  - documentation
  - figure out Google Earth API
- - create the formal Image class 
+ - create the formal Image class
+ - configure dataframe to distinguish cities with the same name in different states

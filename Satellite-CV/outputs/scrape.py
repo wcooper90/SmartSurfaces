@@ -6,26 +6,27 @@ sys.path.append(os.path.abspath('../'))
 from UserInputs import UserInputs
 
 
-def scrape_city(city, columns):
+def scrape_city(city, columns, url):
 
-    data = {}
+    dict_data = {}
+    list_data = []
 
-    for i in range(len(columns)):
-        data[columns[i]] = None
+    # initialize data to NoneType
+    for i in range(1, len(columns)):
+        dict_data[columns[i]] = None
 
-    page = requests.get(UserInputs.DEFAULT_SCRAPING_URL)
+    dict_data[columns[0]] = city
+    list_data.append(city)
+
+
+    page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
 
     info = soup.find_all('table')[4].find('tbody')
 
-    # row_header = True
-    # counter = 0
-    indecies = {}
-    for row in info:
 
-        # if row_header:
-        #     row_header = False
-        #     continue
+    city_not_found = True
+    for row in info:
 
         # skip first row
         try:
@@ -40,14 +41,37 @@ def scrape_city(city, columns):
                 text = text[:-4]
 
             # rstrip needed because wikipedia has an extra line sometimes
-            if element.get_text().rstrip() == city.strip():
-                data[columns[0]] = elements[3].get_text()
-                data[columns[1]] = elements[6].get_text()
-                data[columns[2]] = elements[10].get_text()
+            if text.rstrip() == city.strip():
+
+                if 'population' in columns:
+                    dict_data[columns[1]] = elements[3].get_text().rstrip()
+                    list_data.append(dict_data[columns[1]])
+
+                if 'area' in columns:
+                    string = ""
+                    for char in elements[6].get_text():
+                        if not char.isdigit() and char != ".":
+                            break
+                        try:
+                            string += str(char)
+                        except:
+                            string = str(char)
+
+                    dict_data[columns[2]] = string
+                    list_data.append(string)
+
+                if 'location' in columns:
+
+                    coords = elements[10].get_text().split(';')
+                    dict_data[columns[3]] = coords[0][-7:]
+                    dict_data[columns[3]] += (", " + str(coords[1][2:9]))
+                    list_data.append(dict_data[columns[3]])
+
+                city_not_found = False
                 break
 
+    if city_not_found:
+        return 'error_city_not_found'
 
-    print(data)
-    return data
-
-scrape_city("Boston", ['2019 estimate', '2016 land area', 'Location'])
+    # can return data in list or dictionary form
+    return dict_data

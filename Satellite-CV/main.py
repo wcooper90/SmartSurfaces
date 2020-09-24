@@ -130,3 +130,16 @@ if __name__ == '__main__':
     # find_contours()
     print("_____________CONTOURS CAPTURED____________")
     # percent_green()
+    all_columns = UserInputs.DEFAULT_COLUMNS + ['albedo', 'HS Roofs', 'LS Roofs', 'Greenery']
+
+    data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
+
+    data.add_city('Boston')
+    data.add_city('Cambridge')
+    data.add_city('New Haven')
+    data.add_city('Houston')
+    data.add_city('Dallas')
+
+    data.print_df()
+
+    # data.write_excel()

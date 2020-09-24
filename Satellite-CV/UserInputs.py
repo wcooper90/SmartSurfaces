@@ -18,11 +18,11 @@ class UserInputs():
     PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/'
 
     # image paths
-    RAW_IMG_PATH = PATH + 'images/raw/'
-    CROPPED_IMG_PATH = PATH + 'images/cropped/'
-    GREEN_IMG_PATH = PATH + 'images/green/'
-    CONTOURS_IMG_PATH = PATH + 'images/contours/'
-    GRAY_IMG_PATH = PATH + 'images/gray/'
+    RAW_IMG_PATH = PATH + 'images/analysis/raw/'
+    CROPPED_IMG_PATH = PATH + 'images/analysis/cropped/'
+    GREEN_IMG_PATH = PATH + 'images/analysis/green/'
+    CONTOURS_IMG_PATH = PATH + 'images/analysis/contours/'
+    GRAY_IMG_PATH = PATH + 'images/analysis/gray/'
 
     # default URL for website with data on US cities
     DEFAULT_SCRAPING_URL = 'https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population'

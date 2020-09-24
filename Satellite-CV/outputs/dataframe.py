@@ -8,21 +8,35 @@ from UserInputs import UserInputs
 
 
 class DF():
+    """
+    The DF class stores all data on all cities, and has a number of functions
+    which allow data to be manipulated and displayed. DF primarily makes calls
+    to webscraping functions which fill in data on cities which the City class
+    cannot.
 
+    Main functions:
+    add_city; remove_city; write_excel; remove_excel; print_df
+
+    For any singular run of the code base, only initialization of one DF is necessary.
+
+    """
+
+    # initialize class variables
     def __init__(self, all_columns, scraped_columns, url):
         self.df = pd.DataFrame(columns=all_columns)
         self.columns = all_columns
         self.scraped_columns = scraped_columns
         self.status = 'Empty'
         self.url = url
-        # self.url = UserInputs.DEFAULT_SCRAPING_URL
         self.num_sheets = 0
 
 
+    # print the first [cols] columns of the dataframe
     def print_df(self, cols=5):
         print(self.df.head(cols))
 
 
+    # web scrape certain values for a specific city, add to dataframe
     def add_city(self, city):
 
         num_none_values = len(self.columns) - len(self.scraped_columns)
@@ -46,22 +60,27 @@ class DF():
                         "aligned, or web scraping returned incorrect values!")
 
 
+    # remove a specified city/row from the dataframe
     def remove_city(self, city):
         return 0
 
 
-    def write_excel(self, new_sheet=True):
+    # write the dataframe to a local excel file
+    def write_excel(self):
 
         try:
-            with pd.ExcelWriter(UserInputs.PATH + 'cities.xlsx') as writer:
-                self.df.to_excel(writer, sheet_name='Sheet' + str(self.num_sheets))
+            with pd.ExcelWriter(UserInputs.PATH + 'cities' + str(self.num_sheets) + '.xlsx') as writer:
+                self.df.to_excel(writer)
             self.num_sheets += 1
             print("Successfully converted to Excel file!")
         except:
             print("Error converting to Excel file!")
 
 
+    # delete a specified excel file 
     def remove_excel(self, sheet_name):
-
-        self.num_sheets -= 1
-        return 0
+        try:
+            os.remove(UserInputs.PATH + sheet_name)
+            self.num_sheets -= 1
+        except:
+            print("Error! Sheet doesn't exist or Python was unable to delete it.")

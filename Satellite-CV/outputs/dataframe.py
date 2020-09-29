@@ -15,7 +15,12 @@ class DF():
     cannot.
 
     Main functions:
-    add_city; remove_city; write_excel; remove_excel; print_df
+    add_city_values; write_excel; remove_excel; print_df; add_calculated_city;
+    remove_city
+
+    Note: add_city_values adds web scraped values to the dataframe, and
+    add_calculated_city pulls calculated values (such as albedo, greenery)
+    in through a City object. remove_city deletes the entire row.
 
     For any singular run of the code base, only initialization of one DF is necessary.
 
@@ -37,7 +42,7 @@ class DF():
 
 
     # web scrape certain values for a specific city, add to dataframe
-    def add_city(self, city):
+    def add_city_values(self, city):
 
         num_none_values = len(self.columns) - len(self.scraped_columns)
         non_scraped_columns = [x for x in self.columns if x not in self.scraped_columns]
@@ -60,6 +65,12 @@ class DF():
                         "aligned, or web scraping returned incorrect values!")
 
 
+    # web scrape certain values for a specific city, add to dataframe
+    def add_calculated_city(self, City):
+
+        return 0
+
+
     # remove a specified city/row from the dataframe
     def remove_city(self, city):
         return 0
@@ -77,7 +88,7 @@ class DF():
             print("Error converting to Excel file!")
 
 
-    # delete a specified excel file 
+    # delete a specified excel file
     def remove_excel(self, sheet_name):
         try:
             os.remove(UserInputs.PATH + sheet_name)

@@ -4,7 +4,7 @@ import numpy as np
 import ee
 import os
 import random, sys
-from inputs.city import City
+from src.city import City
 from UserInputs import UserInputs
 from PIL import Image
 from outputs.dataframe import DF
@@ -26,30 +26,25 @@ def delete_photos():
 
 # main function
 if __name__ == '__main__':
-    # print("_____________ROOF AREAS FOUND_____________")
-    # print("_____________CONTOURS CAPTURED____________")
 
     all_columns = UserInputs.DEFAULT_COLUMNS + ['albedo', 'HS Roofs', 'LS Roofs', 'Greenery']
 
     data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
 
-    data.add_city('Boston')
-    data.add_city('Cambridge')
-    data.add_city('New Haven')
-    data.add_city('Houston')
-    data.add_city('Dallas')
+    data.add_city_values('Boston')
+    data.add_city_values('Cambridge')
+    data.add_city_values('New Haven')
+    data.add_city_values('Houston')
+    data.add_city_values('Dallas')
 
     data.print_df()
 
 
     boston = City('Boston')
-
     boston.crop_images()
-    print("____________IMAGES INITIALIZED____________")
-
-    boston.find_green()
-    print("____________GREEN IMAGES FOUND____________")
-
-    boston.percent_green()
+    # boston.find_green()
+    # boston.percent_green()
+    boston.find_contours()
+    # boston.find_roofs()
 
     # data.write_excel()

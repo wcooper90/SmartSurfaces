@@ -8,6 +8,7 @@ import pandas
 import numpy as np
 import random
 from PIL import Image
+from src.shapedetector import ShapeDetector
 
 
 class City():
@@ -22,13 +23,12 @@ class City():
     __init__; find_green; crop_images; find_roofs; find_contours
 
     This class' local variables will eventually be used in the final dataframe,
-    which can be done through main.py. 
+    which can be done through main.py.
 
     """
 
     def __init__(self, name):
         self.name = name
-
         self.contoured = None
         self.contours = 0
         self.albedo = 0
@@ -63,6 +63,7 @@ class City():
 
             im1 = im.crop((left, top, right, bottom))
             im1.save(UserInputs.CROPPED_IMG_PATH + file)
+        print("____________IMAGES INITIALIZED____________")
 
 
     # find the green in all images
@@ -83,6 +84,7 @@ class City():
 
             ## save
             cv2.imwrite(UserInputs.GREEN_IMG_PATH + file, green)
+        print("____________GREEN IMAGES FOUND____________")
 
 
     # calculate the percentage of green pixels in individual images
@@ -118,25 +120,62 @@ class City():
     def calculate_HSroofs(self):
         return 0
 
+
     # find the and create images with only the roofs of images
     def find_roofs(self):
 
         for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
-            im = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
-            hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+            image = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
 
-            ## mask of green (36,25,25) ~ (86, 255,255)
-            # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
-            # can be changed depending on the environment
-            mask = cv2.inRange(hsv, (0, 5, 100), (179, 50, 255))
 
-            ## slice the green
-            imask = mask>0
-            gray = np.zeros_like(im, np.uint8)
-            gray[imask] = im[imask]
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+            thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
 
-            ## save
-            cv2.imwrite(UserInputs.GRAY_IMG_PATH + file, gray)
+            ksize = 5
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (ksize,ksize))
+            thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+
+            cnts, _ = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            # ~ cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+            cnts = cnts[1]
+            sd = ShapeDetector()
+
+            for c in cnts:
+                M = cv2.moments(np.float32(c))
+                print(M)
+                if M["m00"] != 0:  # prevent divide by zero
+                    print('asdf')
+                    cX = int((M["m10"] / M["m00"]))
+                    cY = int((M["m01"] / M["m00"]))
+                    shape = sd.detect(c)
+
+                    c = c.astype("float")
+                    #c *= ratio
+                    c = c.astype("int")
+                    cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+                    cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (255, 0, 0), 2)
+
+            cv2.imwrite(UserInputs.GRAY_IMG_PATH + file, image)
+
+
+            # im = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
+            # hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+            #
+            # ## mask of green (36,25,25) ~ (86, 255,255)
+            # # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
+            # # can be changed depending on the environment
+            # mask = cv2.inRange(hsv, (0, 5, 100), (179, 50, 255))
+            #
+            # ## slice the green
+            # imask = mask>0
+            # gray = np.zeros_like(im, np.uint8)
+            # gray[imask] = im[imask]
+            #
+            # ## save
+            # cv2.imwrite(UserInputs.GRAY_IMG_PATH + file, gray)
+        print("_____________ROOF AREAS FOUND_____________")
 
 
     # find the contours in all images (to be used for finding roofs later)
@@ -165,3 +204,4 @@ class City():
             # img = cv2.drawContours(white, contours, -1, (10, 0, 40), int((counter/2)) % 3 + 1)
             img = cv2.drawContours(white, contours, -1, (10, 0, 40), 2)
             cv2.imwrite(UserInputs.CONTOURS_IMG_PATH + file, img)
+        print("_____________CONTOURS CAPTURED____________")

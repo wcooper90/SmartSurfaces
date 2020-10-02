@@ -10,8 +10,8 @@ class UserInputs():
     """
     # globals
     NUM_IMAGES = 3
-    DEFAULT_HEIGHT = 500
-    DEFAULT_WIDTH = 500
+    DEFAULT_HEIGHT = 700
+    DEFAULT_WIDTH = 700
     DEFAULT_IMAGE_TYPE = '.PNG'
 
     # standard folder path
@@ -21,6 +21,7 @@ class UserInputs():
     RAW_IMG_PATH = PATH + 'images/analysis/raw/'
     CROPPED_IMG_PATH = PATH + 'images/analysis/cropped/'
     GREEN_IMG_PATH = PATH + 'images/analysis/green/'
+    ALTERED_IMG_PATH = PATH + 'images/analysis/altered/'
     CONTOURS_IMG_PATH = PATH + 'images/analysis/contours/'
     GRAY_IMG_PATH = PATH + 'images/analysis/gray/'
 
@@ -30,4 +31,11 @@ class UserInputs():
     # unit conversion, square miles to square feet
     SMILES_TO_SFEET = 27878000
 
+    # default columns for webscraping
     DEFAULT_COLUMNS = ['city', 'population', 'area', 'location']
+
+    # HSV values for color removal
+    LOW_YELLOW = (7, 0, 0)
+    HIGH_YELLOW = (70, 140, 230)
+    LOW_GREEN = (20, 10, 0)
+    HIGH_GREEN = (100, 255,255)

@@ -31,20 +31,23 @@ if __name__ == '__main__':
 
     data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
 
-    data.add_city_values('Boston')
-    data.add_city_values('Cambridge')
-    data.add_city_values('New Haven')
-    data.add_city_values('Houston')
-    data.add_city_values('Dallas')
-
-    data.print_df()
+    # data.add_city_values('Boston')
+    # data.add_city_values('Cambridge')
+    # data.add_city_values('New Haven')
+    # data.add_city_values('Houston')
+    # data.add_city_values('Dallas')
+    #
+    # data.print_df()
 
 
     boston = City('Boston')
     boston.crop_images()
-    # boston.find_green()
+    boston.find_greenery()
+    boston.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
+    boston.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
+
     # boston.percent_green()
+    boston.find_roofs()
     boston.find_contours()
-    # boston.find_roofs()
 
     # data.write_excel()

@@ -9,3 +9,10 @@
  - figure out Google Earth API
  - create the formal Image class
  - configure dataframe to distinguish cities with the same name in different states
+
+
+
+ 2. create function to make brighter pixels brighter and darker pixels darker
+ 3. use cv2 threshold_binary to find white areas
+ 4. use polygon approximation to filter out roads/bodies of water/etc.
+ 5. draw contours over original image

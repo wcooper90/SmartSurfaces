@@ -1,18 +1,6 @@
- - be able to calculate albedo of an image
- - randomly select multiple areas within city boundaries for
-    Google Earth API to be able to return images for
- - in outputs, create file which makes a pandas dataframe/excel file which
-    consists of cities, along with their final statistics, with confidence
-    intervals
- - continue tweaking opencv to be able to detect roofs (color & shape)
- - documentation
- - figure out Google Earth API
- - create the formal Image class
- - configure dataframe to distinguish cities with the same name in different states
-
-
-
- 2. create function to make brighter pixels brighter and darker pixels darker
- 3. use cv2 threshold_binary to find white areas
- 4. use polygon approximation to filter out roads/bodies of water/etc.
- 5. draw contours over original image
+- keep playing with contrast, saturation, sharpness, to find best combination for
+    polygon approximation
+- play right rectangles, save rectangles in another folder, run through
+    testAlgos for close ups of roofs, then create slope functions
+- standardize the image inputs, write functions to calculate roof areas
+- be able to find albedo of an image 

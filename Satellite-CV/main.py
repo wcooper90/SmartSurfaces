@@ -5,6 +5,7 @@ import ee
 import os
 import random, sys
 from src.city import City
+from src.create_images import create_images
 from UserInputs import UserInputs
 from PIL import Image
 from outputs.dataframe import DF
@@ -40,7 +41,8 @@ if __name__ == '__main__':
     # data.print_df()
 
 
-    boston = City('Boston')
+    boston = City('Boston', [42.361145, -71.057083], 5)
+    # boston.find_raw_images()
     boston.crop_images()
     boston.find_greenery()
     boston.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)

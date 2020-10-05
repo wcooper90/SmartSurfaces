@@ -2,11 +2,13 @@ import sys
 import os
 sys.path.append(os.path.abspath('../'))
 from UserInputs import UserInputs
-from .create_images import mkdir, write_images, random_areas
+from .create_images import mkdir, create_images, random_areas
 import cv2
 import pandas
 import numpy as np
 import random
+import tqdm
+import time
 from PIL import Image, ImageFilter
 from src.shapedetector import ShapeDetector
 
@@ -27,8 +29,11 @@ class City():
 
     """
 
-    def __init__(self, name):
+    def __init__(self, name, coords, num_images):
+
         self.name = name
+        self.coords = coords
+        self.num_images = num_images
         self.contoured = None
         self.contours = 0
         self.albedo = 0
@@ -39,10 +44,32 @@ class City():
 
         # make sure path is created
         path = mkdir(self.name)
-        if path != "E":
-            self.images_path = path
-        else:
-            self.images_path = None
+        self.images_path = path
+
+
+
+    def find_raw_images(self):
+        maxX = self.coords[0] + UserInputs.CITY_MARGINS
+        maxY = self.coords[1] + UserInputs.CITY_MARGINS
+        minX = self.coords[0] - UserInputs.CITY_MARGINS
+        minY = self.coords[1] - UserInputs.CITY_MARGINS
+
+        areas = random_areas(maxX, maxY, minX, minY, self.num_images)
+
+        assert(self.images_path is not None)
+        image_number = 0
+        length_areas = len(areas)
+        for area in areas:
+            # wait between 1 and 10 second before making another api call
+            random.seed(image_number)
+            secs = random.randint(0, 10)
+
+            create_images(area[0], area[1], self.images_path, image_number)
+            image_number += 1
+
+            if image_number != length_areas:
+                time.sleep(secs)
+
 
     # calculate the albedo of an image (LANDSAT strategy)
     def calculate_albedo(self):
@@ -51,7 +78,10 @@ class City():
 
     # crop initial images from Google Earth to make sure they are all the same size
     def crop_images(self):
+        # for i, file in enumerate(os.listdir(self.images_path)):
         for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
+
+            # im = Image.open(self.images_path + file)
             im = Image.open(UserInputs.RAW_IMG_PATH + file)
 
             width, height = im.size
@@ -149,10 +179,11 @@ class City():
         for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
 
             # sharpen image
-            # imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
-            # imageObject = imageObject.filter(ImageFilter.SHARPEN)
-            # imageObject.save(UserInputs.ALTERED_IMG_PATH + file)
+            imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
+            imageObject = imageObject.filter(ImageFilter.SHARPEN)
+            imageObject.save(UserInputs.ALTERED_IMG_PATH + file)
 
+            # contrast for image
             img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
             lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 
@@ -169,22 +200,32 @@ class City():
             cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, final)
 
             im = cv2.imread(UserInputs.ALTERED_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
-            im2 = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
+            im2 = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
             _,threshold = cv2.threshold(im, 110, 255,
                             cv2.THRESH_BINARY)
-            contours, _ =cv2.findContours(threshold, cv2.RETR_TREE,
+            contours, _ = cv2.findContours(threshold, cv2.RETR_TREE,
                             cv2.CHAIN_APPROX_SIMPLE)
-            for cnt in contours :
+
+            for cnt in contours:
+
                 area = cv2.contourArea(cnt)
 
+
                 # Shortlisting the regions based on there area.
-                if area > 700 and area < 30000:
+                if area > 800 and area < 15000:
                     approx = cv2.approxPolyDP(cnt,
                                               0.008 * cv2.arcLength(cnt, True), True)
 
                     # Checking if the no. of sides of the selected region is 7.
                     # if(len(approx) >= 4):
                     cv2.drawContours(im2, [approx], 0, (40, 10, 255), 3)
+
+                rect = cv2.boundingRect(cnt)
+                if rect[2] > 200 or rect[3] > 200 or rect[2] < 30 or rect[3] < 30:
+                    continue
+
+                x,y,w,h = rect
+                cv2.rectangle(im2,(x,y),(x+w,y+h),(0,255,0),2)
 
             ## save
             cv2.imwrite(UserInputs.GRAY_IMG_PATH + file, im2)

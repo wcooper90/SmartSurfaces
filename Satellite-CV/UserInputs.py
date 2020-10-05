@@ -39,3 +39,15 @@ class UserInputs():
     HIGH_YELLOW = (70, 140, 230)
     LOW_GREEN = (20, 10, 0)
     HIGH_GREEN = (100, 255,255)
+
+    # margins of city coordinates, so can determine where to take images from
+    CITY_MARGINS = 0.06
+
+    # default zoom for the google maps downloader
+    DEFAULT_ZOOM = 19
+
+    # coordinates accuracy, round to how many decimals
+    ZOOM_DECIMALS = 6
+
+    # City coordinates
+    COORDS = {"Boston": [42.3613, -71.0889, 42.3314, -71.0324]}

@@ -10,12 +10,12 @@ class UserInputs():
     """
     # globals
     NUM_IMAGES = 3
-    DEFAULT_HEIGHT = 700
-    DEFAULT_WIDTH = 700
+    DEFAULT_HEIGHT = 640
+    DEFAULT_WIDTH = 640
     DEFAULT_IMAGE_TYPE = '.PNG'
 
     # standard folder path
-    PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/'
+    PATH = '/mnt/c/Users/wcoop/OneDrive/Desktop/SSC/Satellite-CV/'
 
     # image paths
     RAW_IMG_PATH = PATH + 'images/analysis/raw/'
@@ -24,6 +24,7 @@ class UserInputs():
     ALTERED_IMG_PATH = PATH + 'images/analysis/altered/'
     CONTOURS_IMG_PATH = PATH + 'images/analysis/contours/'
     GRAY_IMG_PATH = PATH + 'images/analysis/gray/'
+    ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/'
 
     # default URL for website with data on US cities
     DEFAULT_SCRAPING_URL = 'https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population'

@@ -12,6 +12,7 @@ from outputs.dataframe import DF
 
 
 # delete all the photos, making room for analysis of new city
+# DELETE ALL PHOTOS BEFORE PUSHING TO GIT !!
 def delete_photos():
     for file in os.listdir(UserInputs.CROPPED_IMG_PATH):
         os.remove(UserInputs.CROPPED_IMG_PATH + file)
@@ -23,10 +24,18 @@ def delete_photos():
         os.remove(UserInputs.CONTOURS_IMG_PATH + file)
     for file in os.listdir(UserInputs.RAW_IMG_PATH):
         os.remove(UserInputs.RAW_IMG_PATH + file)
+    for file in os.listdir(UserInputs.ALTERED_IMG_PATH):
+        os.remove(UserInputs.ALTERED_IMG_PATH + file)
+    for file in os.listdir(UserInputs.ROOFS_IMG_PATH):
+        os.remove(UserInputs.ROOFS_IMG_PATH + file)
+
+    print('photos successfully deleted')
 
 
 # main function
 if __name__ == '__main__':
+
+    # delete_photos()
 
     all_columns = UserInputs.DEFAULT_COLUMNS + ['albedo', 'HS Roofs', 'LS Roofs', 'Greenery']
 
@@ -36,20 +45,22 @@ if __name__ == '__main__':
     # data.add_city_values('Cambridge')
     # data.add_city_values('New Haven')
     # data.add_city_values('Houston')
+    # data.add_city_values('Stockton')
     # data.add_city_values('Dallas')
+    #
     #
     # data.print_df()
 
 
-    boston = City('Boston', [42.361145, -71.057083], 5)
-    # boston.find_raw_images()
-    boston.crop_images()
-    boston.find_greenery()
-    boston.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
-    boston.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
+    stockton = City('Stockton', [37.9577, -121.2908], 5)
+    stockton.find_raw_images(new_images=False)
+    stockton.crop_images()
+    stockton.find_greenery()
+    stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
+    stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
 
     # boston.percent_green()
-    boston.find_roofs()
-    boston.find_contours()
+    stockton.find_roofs()
+    stockton.find_contours()
 
     # data.write_excel()

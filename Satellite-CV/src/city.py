@@ -48,27 +48,34 @@ class City():
 
 
 
-    def find_raw_images(self):
+    def find_raw_images(self, new_images=True):
         maxX = self.coords[0] + UserInputs.CITY_MARGINS
         maxY = self.coords[1] + UserInputs.CITY_MARGINS
         minX = self.coords[0] - UserInputs.CITY_MARGINS
         minY = self.coords[1] - UserInputs.CITY_MARGINS
 
-        areas = random_areas(maxX, maxY, minX, minY, self.num_images)
+        if new_images:
 
-        assert(self.images_path is not None)
-        image_number = 0
-        length_areas = len(areas)
-        for area in areas:
-            # wait between 1 and 10 second before making another api call
-            random.seed(image_number)
-            secs = random.randint(0, 10)
+            areas = random_areas(maxX, maxY, minX, minY, self.num_images)
 
-            create_images(area[0], area[1], self.images_path, image_number)
-            image_number += 1
+            assert(self.images_path is not None)
 
-            if image_number != length_areas:
-                time.sleep(secs)
+            create_images(areas, self.images_path)
+
+
+        self.mount_images(self.images_path, UserInputs.RAW_IMG_PATH)
+
+
+
+    def mount_images(self, src_path, dest_path):
+
+        for file in os.listdir(src_path):
+
+            im = Image.open(src_path + file)
+            im.save(dest_path + file)
+
+        print("_________"+ str(self.name) + " IMAGES MOUNTED_________")
+
 
 
     # calculate the albedo of an image (LANDSAT strategy)
@@ -176,6 +183,8 @@ class City():
     # find the and create images with only the roofs of images
     def find_roofs(self):
 
+        roof_counter = 0
+
         for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
 
             # sharpen image
@@ -208,8 +217,19 @@ class City():
 
             for cnt in contours:
 
-                area = cv2.contourArea(cnt)
 
+                rect = cv2.boundingRect(cnt)
+                if rect[2] > 200 or rect[3] > 200 or rect[2] < 30 or rect[3] < 30:
+                    continue
+
+                x,y,w,h = rect
+
+
+                roi = im2[y:y+h, x:x+w]
+                cv2.imwrite(UserInputs.ROOFS_IMG_PATH + str(roof_counter) + ".jpg", roi)
+                roof_counter += 1
+
+                area = cv2.contourArea(cnt)
 
                 # Shortlisting the regions based on there area.
                 if area > 800 and area < 15000:
@@ -220,11 +240,6 @@ class City():
                     # if(len(approx) >= 4):
                     cv2.drawContours(im2, [approx], 0, (40, 10, 255), 3)
 
-                rect = cv2.boundingRect(cnt)
-                if rect[2] > 200 or rect[3] > 200 or rect[2] < 30 or rect[3] < 30:
-                    continue
-
-                x,y,w,h = rect
                 cv2.rectangle(im2,(x,y),(x+w,y+h),(0,255,0),2)
 
             ## save

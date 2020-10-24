@@ -33,7 +33,7 @@ class UserInputs():
     SMILES_TO_SFEET = 27878000
 
     # default columns for webscraping
-    DEFAULT_COLUMNS = ['city', 'population', 'area', 'location']
+    DEFAULT_COLUMNS = ['city', 'population', 'area (mi^2)', 'location']
 
     # HSV values for color removal
     LOW_YELLOW = (7, 0, 0)

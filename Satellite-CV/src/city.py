@@ -9,8 +9,9 @@ import numpy as np
 import random
 import tqdm
 import time
-from PIL import Image, ImageFilter
 from src.shapedetector import ShapeDetector
+from PIL import Image, ImageFilter, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class City():
@@ -141,14 +142,14 @@ class City():
                     if not (comparison.all()):
                         green_pixels += 1
 
-            print(num_pixels)
-            print(green_pixels)
             green_percentage = green_pixels / num_pixels  * 100
             print("Image " + file + " is %" + str(round(green_percentage, 2)) + " green. ")
             counter += 1
             percentages.append(green_percentage)
 
         self.percentGreen = sum(percentages) / counter
+
+        print('____________' + str(self.name) + ' is ' + str(self.percentGreen) + ' percent green ____________')
 
     def calculate_trees(self):
         return 0

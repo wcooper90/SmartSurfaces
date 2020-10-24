@@ -1,6 +1,10 @@
-- keep playing with contrast, saturation, sharpness, to find best combination for
-    polygon approximation
-- play right rectangles, save rectangles in another folder, run through
-    testAlgos for close ups of roofs, then create slope functions
-- standardize the image inputs, write functions to calculate roof areas
-- be able to find albedo of an image 
+- take green out of test algorithms, run through testAlgo repo to calculate surface area of roofs.
+- calculate surface area covered by random sample of images
+- make sure random sample of images don't overlap
+- how much area of a city do we need to cover in order to fully esimate?
+- shapefiles for cities, to determine if the random generated points are actually in the city?
+- convert roof footage to mileage
+- separate trees from grass with iTree canopy?
+- calculate average albedo over the images
+- input albedo, roofage, and tree canopy into the dataframe
+- try zooming in or out to better roof detection, sharpening image? 

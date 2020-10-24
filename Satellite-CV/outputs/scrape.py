@@ -43,11 +43,11 @@ def scrape_city(city, columns, url):
             # rstrip needed because wikipedia has an extra line sometimes
             if text.rstrip() == city.strip():
 
-                if 'population' in columns:
+                if 'Population' in columns:
                     dict_data[columns[1]] = elements[3].get_text().rstrip()
                     list_data.append(dict_data[columns[1]])
 
-                if 'area' in columns:
+                if 'Area (mi^2)' in columns:
                     string = ""
                     for char in elements[6].get_text():
                         if not char.isdigit() and char != ".":
@@ -60,11 +60,10 @@ def scrape_city(city, columns, url):
                     dict_data[columns[2]] = string
                     list_data.append(string)
 
-                if 'location' in columns:
+                if 'Location' in columns:
 
                     coords = elements[10].get_text().split(';')
-                    dict_data[columns[3]] = coords[0][-7:]
-                    dict_data[columns[3]] += (", " + str(coords[1][2:9]))
+                    dict_data[columns[3]] = (coords[0][-7:], str(coords[1][2:9]))
                     list_data.append(dict_data[columns[3]])
 
                 city_not_found = False

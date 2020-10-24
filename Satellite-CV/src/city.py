@@ -2,7 +2,8 @@ import sys
 import os
 sys.path.append(os.path.abspath('../'))
 from UserInputs import UserInputs
-from .create_images import mkdir, create_images, random_areas
+from .create_images import mkdir, create_images, random_areas, calculate_area
+from .misc_functions import sharp
 import cv2
 import pandas
 import numpy as np
@@ -19,18 +20,22 @@ class City():
     City is a class which finds and stores images for a specific city (in the US),
     and has functions which can calculate albedo, percentage green/canopy, and
     sloped/nonsloped roofs using computer vision.
+
     Main functions:
-    percent_green; percent_trees; calculate_albedo; calculate_HSroofs;
-    calculate_LSroofs.
+    percent_green; percent_trees; calculate_albedo; calculate_roofs
+
     Supporting functions:
     __init__; find_green; crop_images; find_roofs; find_contours
+
+    Logistical functions:
+    integrate; find_raw_images
 
     This class' local variables will eventually be used in the final dataframe,
     which can be done through main.py.
 
     """
 
-    def __init__(self, name, coords, num_images):
+    def __init__(self, name, coords, num_images, df, column):
 
         self.name = name
         self.coords = coords
@@ -39,14 +44,29 @@ class City():
         self.contours = 0
         self.albedo = 0
         self.trees = 0
-        self.LSroofs = 0
-        self.HSroofs = 0
+        self.roofs = 0
         self.percentGreen = 0
+        self.areaCovered = 0
+        self.percentAreaCovered = 0
+        self.column = column
+        self.latitude = float(df["Location"][self.column][0])
+        self.longitude = float(df["Location"][self.column][1])
+        self.tileArea = calculate_area(self.latitude) * UserInputs.DEFAULT_HEIGHT * UserInputs.DEFAULT_WIDTH
+
+        try:
+            self.area = float(df["Area (mi^2)"][self.column])
+            if not self.area:
+                print("Area has not been found for city of " + self.name)
+            else:
+                self.area *= UserInputs.SMILES_TO_SFEET
+                # print("Area of " + self.name + " is " + str(self.area) + " square feet.")
+
+        except:
+            print("City of " + self.name + " is not in the dataframe! Please add it before declaring this object. ")
 
         # make sure path is created
         path = mkdir(self.name)
         self.images_path = path
-
 
 
     def find_raw_images(self, new_images=True):
@@ -66,6 +86,8 @@ class City():
 
         self.mount_images(self.images_path, UserInputs.RAW_IMG_PATH)
 
+        self.areaCovered += self.num_images * self.tileArea
+        self.percentAreaCovered = self.areaCovered / self.area * 100
 
 
     def mount_images(self, src_path, dest_path):
@@ -143,13 +165,13 @@ class City():
                         green_pixels += 1
 
             green_percentage = green_pixels / num_pixels  * 100
-            print("Image " + file + " is %" + str(round(green_percentage, 2)) + " green. ")
+            # print("Image " + file + " is %" + str(round(green_percentage, 2)) + " green. ")
             counter += 1
             percentages.append(green_percentage)
 
         self.percentGreen = sum(percentages) / counter
 
-        print('____________' + str(self.name) + ' is ' + str(self.percentGreen) + ' percent green ____________')
+        print('______' + str(self.name) + ' is ' + str(round(self.percentGreen, 5)) + '% green______')
 
     def calculate_trees(self):
         return 0
@@ -193,8 +215,12 @@ class City():
             imageObject = imageObject.filter(ImageFilter.SHARPEN)
             imageObject.save(UserInputs.ALTERED_IMG_PATH + file)
 
-            # contrast for image
             img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
+            # img = sharp(img)
+
+
+            # contrast for image
+
             lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 
             l, a, b = cv2.split(lab)
@@ -211,9 +237,9 @@ class City():
 
             im = cv2.imread(UserInputs.ALTERED_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
             im2 = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
-            _,threshold = cv2.threshold(im, 110, 255,
-                            cv2.THRESH_BINARY)
-            contours, _ = cv2.findContours(threshold, cv2.RETR_TREE,
+            _,threshold = cv2.threshold(im, 127, 255,
+                            cv2.THRESH_BINARY_INV)
+            contours, _ = cv2.findContours(threshold, cv2.RETR_CCOMP,
                             cv2.CHAIN_APPROX_SIMPLE)
 
             for cnt in contours:
@@ -252,7 +278,7 @@ class City():
     # find the contours in all images (to be used for finding roofs later)
     def find_contours(self):
         for i, file in enumerate(os.listdir(UserInputs.GREEN_IMG_PATH)):
-            im = cv2.imread(UserInputs.GRAY_IMG_PATH + file)
+            im = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
 
             # Grayscale
             imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
@@ -269,10 +295,22 @@ class City():
                 screeCnt = approx
 
             # a white backdrop the same size as the rest of video
-            white = np.full((UserInputs.DEFAULT_HEIGHT, UserInputs.DEFAULT_HEIGHT), 255, dtype=np.uint8)
+            img = np.full((UserInputs.DEFAULT_HEIGHT, UserInputs.DEFAULT_HEIGHT), 255, dtype=np.uint8)
             # Draw all contours
             # -1 signifies drawing all contours
             # img = cv2.drawContours(white, contours, -1, (10, 0, 40), int((counter/2)) % 3 + 1)
-            img = cv2.drawContours(white, contours, -1, (10, 0, 40), 2)
+            for cnt in contours:
+                area = cv2.contourArea(cnt)
+                if area > 200:
+                    img = cv2.drawContours(img, cnt, -1, (10, 0, 40), 2)
             cv2.imwrite(UserInputs.CONTOURS_IMG_PATH + file, img)
         print("_____________CONTOURS CAPTURED____________")
+
+
+    # input data into city dataframe
+    def integrate(self, df):
+        df['Albedo'][self.column] = self.albedo
+        df['Greenery (%)'][self.column] = self.percentGreen
+        df['Roofs (mi^2)'][self.column] = self.roofs
+
+        print("_________" + self.name + " DATA INTEGRATED________")

@@ -36,34 +36,38 @@ def delete_photos():
 # main function
 if __name__ == '__main__':
 
-    delete_photos()
+    # delete_photos()
 
-    # all_columns = UserInputs.DEFAULT_COLUMNS + ['albedo', 'Roofs (mi^2)', 'Greenery (%)']
-    #
-    # data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
-    #
-    # # data.add_city_values('Boston')
-    # # data.add_city_values('Cambridge')
-    # # data.add_city_values('New Haven')
-    # # data.add_city_values('Houston')
-    # # data.add_city_values('Stockton')
-    # # data.add_city_values('Dallas')
-    # #
-    # #
-    # # data.print_df()
-    #
-    #
-    # stockton = City('Stockton', [37.9577, -121.2908], 50)
-    # # stockton.find_raw_images(new_images=False)
-    # # stockton.find_raw_images()
-    #
-    # stockton.crop_images()
-    # stockton.find_greenery()
-    # stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
-    # stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
-    #
-    # stockton.percent_green()
-    # stockton.find_roofs()
-    # stockton.find_contours()
-    #
+    all_columns = UserInputs.DEFAULT_COLUMNS + ['Albedo', 'Roofs (mi^2)', 'Greenery (%)']
+
+    data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
+
+    # data.add_city_values('Boston')
+    # data.add_city_values('Cambridge')
+    # data.add_city_values('New Haven')
+    # data.add_city_values('Houston')
+    data.add_city_values('Stockton')
+    # data.add_city_values('Dallas')
+
+
+    stockton = City('Stockton', [37.9577, -121.2908], 5, data.df, data.return_row("Stockton"))
+
+    for i in range(1):
+        # stockton.find_raw_images(new_images=False)
+        stockton.find_raw_images()
+
+        stockton.crop_images()
+        stockton.find_greenery()
+        stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
+        stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
+
+        stockton.percent_green()
+        stockton.find_roofs()
+        stockton.find_contours()
+        stockton.integrate(data.df)
+
+        # delete_photos()
+
+    print(stockton.percentAreaCovered)
+    data.print_df()
     # # data.write_excel()

@@ -56,7 +56,7 @@ class DF():
         try:
             dic2 = dict(row_values, **none_values)
             self.df = self.df.append(dic2, ignore_index=True)
-            print('City of ' + city + ' added!')
+            print('City of ' + city + ' added to dataframe!')
         except:
             if isinstance(row_values, str):
                 print("Error; city is spelled incorrectly or doesn't exist!")
@@ -95,3 +95,14 @@ class DF():
             self.num_sheets -= 1
         except:
             print("Error! Sheet doesn't exist or Python was unable to delete it.")
+
+
+    # return the row in which a city belongs
+    def return_row(self, city_name):
+
+        for i in range(len(self.df)):
+
+            if self.df['City'][i] == city_name:
+                return i
+
+        return None

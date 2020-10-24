@@ -29,11 +29,12 @@ class UserInputs():
     # default URL for website with data on US cities
     DEFAULT_SCRAPING_URL = 'https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population'
 
-    # unit conversion, square miles to square feet
+    # unit conversion, square miles and square meters to square feet
     SMILES_TO_SFEET = 27878000
+    SMETERS_TO_SFEET = 10.7639
 
     # default columns for webscraping
-    DEFAULT_COLUMNS = ['city', 'population', 'area (mi^2)', 'location']
+    DEFAULT_COLUMNS = ['City', 'Population', 'Area (mi^2)', 'Location']
 
     # HSV values for color removal
     LOW_YELLOW = (7, 0, 0)
@@ -45,7 +46,7 @@ class UserInputs():
     CITY_MARGINS = 0.06
 
     # default zoom for the google maps downloader
-    DEFAULT_ZOOM = 19
+    DEFAULT_ZOOM = str(19)
 
     # coordinates accuracy, round to how many decimals
     ZOOM_DECIMALS = 6

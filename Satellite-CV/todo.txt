@@ -1,10 +1,8 @@
-- take green out of test algorithms, run through testAlgo repo to calculate surface area of roofs.
-- calculate surface area covered by random sample of images
 - make sure random sample of images don't overlap
-- how much area of a city do we need to cover in order to fully esimate?
+- make sure roofs don't overlap too much
 - shapefiles for cities, to determine if the random generated points are actually in the city?
-- convert roof footage to mileage
 - separate trees from grass with iTree canopy?
 - calculate average albedo over the images
 - input albedo, roofage, and tree canopy into the dataframe
-- try zooming in or out to better roof detection, sharpening image? 
+- try zooming in or out to better roof detection, sharpening image?
+- otsu's binarization on altered images

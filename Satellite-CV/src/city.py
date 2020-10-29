@@ -2,8 +2,8 @@ import sys
 import os
 sys.path.append(os.path.abspath('../'))
 from UserInputs import UserInputs
-from .create_images import mkdir, create_images, random_areas, calculate_area
-from .misc_functions import sharp
+from .create_images import mkdir, create_images, random_areas
+from .misc_functions import sharp, calculate_area
 import cv2
 import pandas
 import numpy as np
@@ -11,7 +11,7 @@ import random
 import tqdm
 import time
 from src.shapedetector import ShapeDetector
-from PIL import Image, ImageFilter, ImageFile
+from PIL import Image, ImageFilter, ImageFile, ImageEnhance
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
@@ -39,19 +39,22 @@ class City():
 
         self.name = name
         self.coords = coords
-        self.num_images = num_images
+        self.batch_size = num_images
         self.contoured = None
         self.contours = 0
         self.albedo = 0
         self.trees = 0
-        self.roofs = 0
-        self.percentGreen = 0
+        self.roofCounter = 0
+        self.roofArea = 0
+        self.roofPixels = 0
+        self.percentGreen = None
         self.areaCovered = 0
         self.percentAreaCovered = 0
         self.column = column
         self.latitude = float(df["Location"][self.column][0])
         self.longitude = float(df["Location"][self.column][1])
-        self.tileArea = calculate_area(self.latitude) * UserInputs.DEFAULT_HEIGHT * UserInputs.DEFAULT_WIDTH
+        self.feetPerPixel = calculate_area(self.latitude)
+        self.tileArea = self.feetPerPixel * UserInputs.DEFAULT_HEIGHT * UserInputs.DEFAULT_WIDTH
 
         try:
             self.area = float(df["Area (mi^2)"][self.column])
@@ -69,7 +72,7 @@ class City():
         self.images_path = path
 
 
-    def find_raw_images(self, new_images=True):
+    def find_raw_images(self, num, new_images=True, replacement=False, file=None):
         maxX = self.coords[0] + UserInputs.CITY_MARGINS
         maxY = self.coords[1] + UserInputs.CITY_MARGINS
         minX = self.coords[0] - UserInputs.CITY_MARGINS
@@ -77,17 +80,25 @@ class City():
 
         if new_images:
 
-            areas = random_areas(maxX, maxY, minX, minY, self.num_images)
+            areas = random_areas(maxX, maxY, minX, minY, num)
 
             assert(self.images_path is not None)
 
-            create_images(areas, self.images_path)
+            image_nums = []
+            if not replacement:
+                image_nums = np.arange(0, num)
+            else:
+                image_nums = [int("".join([char for char in file if char.isdigit()]))]
 
+            create_images(areas, image_nums, self.images_path)
 
         self.mount_images(self.images_path, UserInputs.RAW_IMG_PATH)
+        self.mount_images(self.images_path, UserInputs.ALTERED_IMG_PATH)
 
-        self.areaCovered += self.num_images * self.tileArea
-        self.percentAreaCovered = self.areaCovered / self.area * 100
+
+        if not replacement:
+            self.areaCovered += self.batch_size * self.tileArea
+            self.percentAreaCovered = self.areaCovered / self.area * 100
 
 
     def mount_images(self, src_path, dest_path):
@@ -97,7 +108,7 @@ class City():
             im = Image.open(src_path + file)
             im.save(dest_path + file)
 
-        print("_________"+ str(self.name) + " IMAGES MOUNTED_________")
+        print("_________"+ str(self.name.upper()) + " IMAGES MOUNTED_________")
 
 
 
@@ -106,6 +117,7 @@ class City():
         return 0
 
 
+    # deprecated
     # crop initial images from Google Earth to make sure they are all the same size
     def crop_images(self):
         # for i, file in enumerate(os.listdir(self.images_path)):
@@ -130,14 +142,14 @@ class City():
 
     # find the green in all images
     def find_greenery(self):
-        for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
-            im = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
+        for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
+            im = cv2.imread(UserInputs.RAW_IMG_PATH + file)
             hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
             ## mask of green (36,25,25) ~ (86, 255,255)
             # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
             # can be changed depending on the environment
-            mask = cv2.inRange(hsv, (20, 10, 10), (100, 255,255))
+            mask = cv2.inRange(hsv, UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
 
             ## slice the green
             imask = mask>0
@@ -176,85 +188,115 @@ class City():
     def calculate_trees(self):
         return 0
 
-    def calculate_LSroofs(self):
-        return 0
+    def calculate_roofs(self):
+        for i, file in enumerate(os.listdir(UserInputs.FINAL_ROOFS_IMG_PATH)):
+            im = cv2.imread(UserInputs.FINAL_ROOFS_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
+            self.roofPixels += cv2.countNonZero(im)
 
-    def calculate_HSroofs(self):
-        return 0
+        roofArea = self.roofPixels * self.feetPerPixel
+        proportion = 100 / self.percentAreaCovered
+        self.roofArea = roofArea * proportion / UserInputs.SMILES_TO_SFEET
 
 
-    def remove_color(self, low_threshold, high_threshold):
-        for i, file in enumerate(os.listdir(UserInputs.ALTERED_IMG_PATH)):
-            im = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
-            hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+    def remove_color(self, low_threshold, high_threshold, path=UserInputs.ALTERED_IMG_PATH):
+        for i, file in enumerate(os.listdir(path)):
+            im = cv2.imread(path + file)
+            new_image = self.remove_color_helper(low_threshold, high_threshold, path + file)
 
-            ## mask of green (36,25,25) ~ (86, 255,255)
-            # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
-            # can be changed depending on the environment
-            mask = cv2.inRange(hsv, low_threshold, high_threshold)
-
-            ## slice the green
-            imask = mask>0
-            color = np.zeros_like(im, np.uint8)
-            color[imask] = im[imask]
+            # if the greened image is the same as original, find a new raw image
+            while np.array_equal(new_image, im):
+                print('helo')
+                self.find_raw_images(1, replacement=True, file=file)
+                new_image = self.remove_color_helper(low_threshold, high_threshold, path + file)
 
             ## save
-            cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, im - color)
+            cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, new_image)
         print("__________COLOR REMOVAL COMPLETE__________")
+
+
+    def remove_color_helper(self, low_threshold, high_threshold, file):
+        im = cv2.imread(file)
+        hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+
+        ## mask of green (36,25,25) ~ (86, 255,255)
+        # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
+        # can be changed depending on the environment
+        mask = cv2.inRange(hsv, low_threshold, high_threshold)
+        ## slice the green
+        imask = mask>0
+        color = np.zeros_like(im, np.uint8)
+        color[imask] = im[imask]
+
+        new_image = im - color
+
+        return new_image
+
+
+
+    def alter_images(self, sharpen=True, contrast=True, brighten=True, grayscale=False):
+        for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
+
+            if contrast:
+                imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
+
+                enhancer = ImageEnhance.Contrast(imageObject)
+
+                factor = 1.2 #increase contrast
+                im_output = enhancer.enhance(factor)
+                im_output.save('more-contrast-image.png')
+                im_output.save(UserInputs.ALTERED_IMG_PATH + file)
+
+            # sharpen image
+            if sharpen:
+                imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
+                enhancer = ImageEnhance.Sharpness(imageObject)
+                factor = 2
+                im_output = enhancer.enhance(factor)
+                im_output.save(UserInputs.ALTERED_IMG_PATH + file)
+                # img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
+                # img = sharp(img)
+                # cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, img)
+
+            if brighten:
+                imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
+                enhancer = ImageEnhance.Brightness(imageObject)
+                enhanced_im = enhancer.enhance(UserInputs.BRIGHTNESS_INCREASE)
+                enhanced_im.save(UserInputs.ALTERED_IMG_PATH + file)
+
+            if grayscale:
+                img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
+                gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+                cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, gray)
 
 
     # find the and create images with only the roofs of images
     def find_roofs(self):
 
-        roof_counter = 0
+        for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
 
-        for i, file in enumerate(os.listdir(UserInputs.CROPPED_IMG_PATH)):
-
-            # sharpen image
-            imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
-            imageObject = imageObject.filter(ImageFilter.SHARPEN)
-            imageObject.save(UserInputs.ALTERED_IMG_PATH + file)
-
-            img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
-            # img = sharp(img)
-
-
-            # contrast for image
-
-            lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-
-            l, a, b = cv2.split(lab)
-
-            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-            cl = clahe.apply(l)
-
-            #-----Merge the CLAHE enhanced L-channel with the a and b channel-----------
-            limg = cv2.merge((cl,a,b))
-
-            #-----Converting image from LAB Color model to RGB model--------------------
-            final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-            cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, final)
 
             im = cv2.imread(UserInputs.ALTERED_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
-            im2 = cv2.imread(UserInputs.CROPPED_IMG_PATH + file)
+            im2 = cv2.imread(UserInputs.RAW_IMG_PATH + file)
             _,threshold = cv2.threshold(im, 127, 255,
                             cv2.THRESH_BINARY_INV)
             contours, _ = cv2.findContours(threshold, cv2.RETR_CCOMP,
                             cv2.CHAIN_APPROX_SIMPLE)
 
+            rects = []
+
             for cnt in contours:
 
 
                 rect = cv2.boundingRect(cnt)
-                if rect[2] > 200 or rect[3] > 200 or rect[2] < 30 or rect[3] < 30:
+
+                if rect[2] > 250 or rect[3] > 250 or rect[2] < 30 or rect[3] < 30:
+                    continue
+                elif rect[2] > 3 * rect[3] or rect[3] > 3 * rect[2]:
                     continue
 
+                rects.append(rect)
+
                 x,y,w,h = rect
-
-
-                roi = im2[y:y+h, x:x+w]
-                cv2.imwrite(UserInputs.ROOFS_IMG_PATH + str(roof_counter) + ".jpg", roi)
-                roof_counter += 1
 
                 area = cv2.contourArea(cnt)
 
@@ -265,9 +307,20 @@ class City():
 
                     # Checking if the no. of sides of the selected region is 7.
                     # if(len(approx) >= 4):
-                    cv2.drawContours(im2, [approx], 0, (40, 10, 255), 3)
+                    # cv2.drawContours(im2, [approx], 0, (40, 10, 255), 3)
 
                 cv2.rectangle(im2,(x,y),(x+w,y+h),(0,255,0),2)
+
+            im3 = cv2.imread(UserInputs.RAW_IMG_PATH + file)
+            for rect in rects:
+                x, y, w, h = rect
+                roi1 = im[y:y+h, x:x+w]
+                roi2 = im3[y:y+h, x:x+w]
+                cv2.imwrite(UserInputs.ROOFS_IMG_PATH + str(self.roofCounter) + ".PNG", roi2)
+                blur = cv2.GaussianBlur(roi1,(5,5),0)
+                _, fix  = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                cv2.imwrite(UserInputs.FINAL_ROOFS_IMG_PATH + str(self.roofCounter) + ".PNG", fix)
+                self.roofCounter += 1
 
             ## save
             cv2.imwrite(UserInputs.GRAY_IMG_PATH + file, im2)
@@ -311,6 +364,6 @@ class City():
     def integrate(self, df):
         df['Albedo'][self.column] = self.albedo
         df['Greenery (%)'][self.column] = self.percentGreen
-        df['Roofs (mi^2)'][self.column] = self.roofs
+        df['Roofs (mi^2)'][self.column] = self.roofArea
 
-        print("_________" + self.name + " DATA INTEGRATED________")
+        print("_________" + self.name.upper() + " DATA INTEGRATED________")

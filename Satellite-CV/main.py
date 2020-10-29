@@ -29,6 +29,8 @@ def delete_photos():
         os.remove(UserInputs.ALTERED_IMG_PATH + file)
     for file in os.listdir(UserInputs.ROOFS_IMG_PATH):
         os.remove(UserInputs.ROOFS_IMG_PATH + file)
+    for file in os.listdir(UserInputs.FINAL_ROOFS_IMG_PATH):
+        os.remove(UserInputs.FINAL_ROOFS_IMG_PATH + file)
 
     print('photos successfully deleted')
 
@@ -36,7 +38,7 @@ def delete_photos():
 # main function
 if __name__ == '__main__':
 
-    # delete_photos()
+    delete_photos()
 
     all_columns = UserInputs.DEFAULT_COLUMNS + ['Albedo', 'Roofs (mi^2)', 'Greenery (%)']
 
@@ -50,24 +52,25 @@ if __name__ == '__main__':
     # data.add_city_values('Dallas')
 
 
-    stockton = City('Stockton', [37.9577, -121.2908], 5, data.df, data.return_row("Stockton"))
+    stockton = City('Stockton', [37.9577, -121.2908], 10, data.df, data.return_row("Stockton"))
 
     for i in range(1):
-        # stockton.find_raw_images(new_images=False)
-        stockton.find_raw_images()
+        stockton.find_raw_images(stockton.batch_size, new_images=False)
+        # stockton.find_raw_images(stockton.batch_size)
 
-        stockton.crop_images()
-        stockton.find_greenery()
-        stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
+        # stockton.crop_images()
         stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
-
-        stockton.percent_green()
+        stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
+        stockton.find_greenery()
+        stockton.alter_images()
         stockton.find_roofs()
-        stockton.find_contours()
+        stockton.calculate_roofs()
+        # stockton.find_contours()
+        stockton.percent_green()
         stockton.integrate(data.df)
 
         # delete_photos()
 
     print(stockton.percentAreaCovered)
     data.print_df()
-    # # data.write_excel()
+    # data.write_excel()

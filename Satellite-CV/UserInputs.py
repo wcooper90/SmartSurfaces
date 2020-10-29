@@ -24,7 +24,8 @@ class UserInputs():
     ALTERED_IMG_PATH = PATH + 'images/analysis/altered/'
     CONTOURS_IMG_PATH = PATH + 'images/analysis/contours/'
     GRAY_IMG_PATH = PATH + 'images/analysis/gray/'
-    ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/'
+    ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/raw/'
+    FINAL_ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/final/'
 
     # default URL for website with data on US cities
     DEFAULT_SCRAPING_URL = 'https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population'
@@ -37,10 +38,10 @@ class UserInputs():
     DEFAULT_COLUMNS = ['City', 'Population', 'Area (mi^2)', 'Location']
 
     # HSV values for color removal
-    LOW_YELLOW = (7, 0, 0)
-    HIGH_YELLOW = (70, 140, 230)
-    LOW_GREEN = (20, 10, 0)
-    HIGH_GREEN = (100, 255,255)
+    LOW_YELLOW = (10, 10, 10)
+    HIGH_YELLOW = (60, 150, 250)
+    LOW_GREEN = (25, 0, 0)
+    HIGH_GREEN = (100, 255, 250)
 
     # margins of city coordinates, so can determine where to take images from
     CITY_MARGINS = 0.06
@@ -53,3 +54,6 @@ class UserInputs():
 
     # City coordinates
     COORDS = {"Boston": [42.3613, -71.0889, 42.3314, -71.0324]}
+
+    # brightness increase for roof finding
+    BRIGHTNESS_INCREASE = 1.5

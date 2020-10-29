@@ -2,6 +2,10 @@ from PIL import Image
 import cv2
 import numpy as np
 import math
+import os
+import sys
+sys.path.append(os.path.abspath('../'))
+from UserInputs import UserInputs
 
 
 def sharp(gray):
@@ -11,3 +15,8 @@ def sharp(gray):
         [-2, 17, -2],
         [-2, -2, -2]), dtype='int')
     return cv2.filter2D(blur, -1, kernel_sharp)
+
+
+def calculate_area(lat):
+    metersPerPx = 156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, int(UserInputs.DEFAULT_ZOOM))
+    return metersPerPx * UserInputs.SMETERS_TO_SFEET

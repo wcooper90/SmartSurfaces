@@ -4,13 +4,18 @@ sys.path.append(os.path.abspath('../'))
 from UserInputs import UserInputs
 from .create_images import mkdir, create_images, random_areas
 from .misc_functions import sharp, calculate_area
+import matplotlib.pyplot as plt
 import cv2
 import pandas
 import numpy as np
 import random
+import scipy.ndimage
+from deepforest import deepforest
+from deepforest import get_data
 import tqdm
 import time
 from src.shapedetector import ShapeDetector
+import PIL
 from PIL import Image, ImageFilter, ImageFile, ImageEnhance
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -40,10 +45,15 @@ class City():
         self.name = name
         self.coords = coords
         self.batch_size = num_images
+        self.images_covered_b = 0
+        self.images_brightness = 0
         self.contoured = None
         self.contours = 0
         self.albedo = 0
-        self.trees = 0
+        self.albedo_calculations = 0
+        self.treeArea = 0
+        self.treePixels = 0
+        self.percentTrees = None
         self.roofCounter = 0
         self.roofArea = 0
         self.roofPixels = 0
@@ -108,13 +118,48 @@ class City():
             im = Image.open(src_path + file)
             im.save(dest_path + file)
 
-        print("_________"+ str(self.name.upper()) + " IMAGES MOUNTED_________")
+        print("_________"+ str(self.name.upper()) + " IMAGES MOUNTED__________")
 
 
 
     # calculate the albedo of an image (LANDSAT strategy)
     def calculate_albedo(self):
-        return 0
+
+        albedo_sum = 0
+        num = len(os.listdir(UserInputs.RAW_IMG_PATH))
+
+        for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
+
+            brightness = self.brightness(UserInputs.RAW_IMG_PATH + file)
+            self.images_brightness += brightness
+            self.images_covered_b += 1
+
+            brightest_pixel = self.brightest(UserInputs.RAW_IMG_PATH + file)
+
+            if brightest_pixel > 240:
+                albedo_sum += brightness / brightest_pixel * 0.65
+            else:
+                difference = 240 - brightest_pixel
+                standard_albedo = 0.65 - 0.01 * difference
+                if standard_albedo < 0.15:
+                    standard_albedo =  0.15
+                albedo_sum += brightness / brightest_pixel * standard_albedo
+
+        albedo = albedo_sum / num
+        self.albedo = (self.albedo_calculations * self.albedo + albedo) / (self.albedo_calculations + 1)
+
+        print("_____________ALBEDO CALCULATED____________")
+
+
+    def brightness(self, im_file):
+        im = Image.open(im_file).convert('L')
+        stat = PIL.ImageStat.Stat(im)
+        return stat.mean[0]
+
+    # manually search for brightest pixel, stop if find something above 240
+    def brightest(self, im_file):
+        res = np.array(cv2.imread(im_file, cv2.IMREAD_GRAYSCALE))
+        return max(map(max, res))
 
 
     # deprecated
@@ -185,8 +230,45 @@ class City():
 
         print('______' + str(self.name) + ' is ' + str(round(self.percentGreen, 5)) + '% green______')
 
+
     def calculate_trees(self):
-        return 0
+
+        for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
+
+            test_model = deepforest.deepforest()
+            test_model.use_release()
+
+            image_path = get_data(UserInputs.GREEN_IMG_PATH + file)
+
+            # use this prediction to save images instead of calculating area
+            boxes1 = test_model.predict_image(image_path=image_path)
+            # use this prediction to calculate area
+            boxes2 = test_model.predict_image(image_path=image_path, show=False, return_plot=False)
+
+            # for tiles, if can implement
+            # Window size of 300px with an overlap of 25% among windows for this small tile.
+            # raster_path = get_data(UserInputs.RAW_IMG_PATH + file)
+            # predicted_raster = test_model.predict_tile(raster_path, return_plot = True, patch_size=300,patch_overlap=0.25)
+
+
+            for box in boxes2.iterrows():
+                x = float(box[1]['xmax']) - float(box[1]['xmin'])
+                y = float(box[1]['ymax']) - float(box[1]['ymin'])
+                self.treePixels += x * y
+
+            # Show image, matplotlib expects RGB channel order, but keras-retinanet predicts in BGR
+            plt.imshow(boxes1[...,::-1])
+            plt.show()
+
+            plt.savefig(UserInputs.TREES_IMG_PATH + file)
+
+
+        self.treeArea = self.treePixels * self.feetPerPixel
+        self.percentTrees = self.treeArea / self.areaCovered * 100
+        print(self.treeArea)
+        print(self.areaCovered)
+        print("_____________TREE AREAS FOUND_____________")
+
 
     def calculate_roofs(self):
         for i, file in enumerate(os.listdir(UserInputs.FINAL_ROOFS_IMG_PATH)):
@@ -365,5 +447,7 @@ class City():
         df['Albedo'][self.column] = self.albedo
         df['Greenery (%)'][self.column] = self.percentGreen
         df['Roofs (mi^2)'][self.column] = self.roofArea
+        df['Trees (%)'][self.column] = self.percentTrees
+        df['Area Calculated (%)'][self.column] = self.percentAreaCovered
 
-        print("_________" + self.name.upper() + " DATA INTEGRATED________")
+        print("----------------" + self.name.upper() + " DATA INTEGRATED---------------")

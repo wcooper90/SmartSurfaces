@@ -65,12 +65,6 @@ class DF():
                         "aligned, or web scraping returned incorrect values!")
 
 
-    # web scrape certain values for a specific city, add to dataframe
-    def add_calculated_city(self, City):
-
-        return 0
-
-
     # remove a specified city/row from the dataframe
     def remove_city(self, city):
         return 0

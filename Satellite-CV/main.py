@@ -14,33 +14,47 @@ from outputs.dataframe import DF
 # delete all the photos, making room for analysis of new city
 # DELETE ALL PHOTOS BEFORE PUSHING TO GIT !!
 # DELETE GOOGLE API KEY AS WELL BEFORE PUSHING
-def delete_photos():
-    for file in os.listdir(UserInputs.CROPPED_IMG_PATH):
-        os.remove(UserInputs.CROPPED_IMG_PATH + file)
-    for file in os.listdir(UserInputs.GRAY_IMG_PATH):
-        os.remove(UserInputs.GRAY_IMG_PATH + file)
-    for file in os.listdir(UserInputs.GREEN_IMG_PATH):
-        os.remove(UserInputs.GREEN_IMG_PATH + file)
-    for file in os.listdir(UserInputs.CONTOURS_IMG_PATH):
-        os.remove(UserInputs.CONTOURS_IMG_PATH + file)
-    for file in os.listdir(UserInputs.RAW_IMG_PATH):
-        os.remove(UserInputs.RAW_IMG_PATH + file)
-    for file in os.listdir(UserInputs.ALTERED_IMG_PATH):
-        os.remove(UserInputs.ALTERED_IMG_PATH + file)
-    for file in os.listdir(UserInputs.ROOFS_IMG_PATH):
-        os.remove(UserInputs.ROOFS_IMG_PATH + file)
-    for file in os.listdir(UserInputs.FINAL_ROOFS_IMG_PATH):
-        os.remove(UserInputs.FINAL_ROOFS_IMG_PATH + file)
+def delete_photos(city = None):
+    try:
+        for file in os.listdir(UserInputs.CROPPED_IMG_PATH):
+            os.remove(UserInputs.CROPPED_IMG_PATH + file)
+        for file in os.listdir(UserInputs.GRAY_IMG_PATH):
+            os.remove(UserInputs.GRAY_IMG_PATH + file)
+        for file in os.listdir(UserInputs.GREEN_IMG_PATH):
+            os.remove(UserInputs.GREEN_IMG_PATH + file)
+        for file in os.listdir(UserInputs.CONTOURS_IMG_PATH):
+            os.remove(UserInputs.CONTOURS_IMG_PATH + file)
+        for file in os.listdir(UserInputs.RAW_IMG_PATH):
+            os.remove(UserInputs.RAW_IMG_PATH + file)
+        for file in os.listdir(UserInputs.ALTERED_IMG_PATH):
+            os.remove(UserInputs.ALTERED_IMG_PATH + file)
+        for file in os.listdir(UserInputs.ROOFS_IMG_PATH):
+            os.remove(UserInputs.ROOFS_IMG_PATH + file)
+        for file in os.listdir(UserInputs.FINAL_ROOFS_IMG_PATH):
+            os.remove(UserInputs.FINAL_ROOFS_IMG_PATH + file)
+        for file in os.listdir(UserInputs.TREES_IMG_PATH):
+            os.remove(UserInputs.TREES_IMG_PATH + file)
+        if city:
+            for file in os.listdir(UserInputs.CITY_PATH + city + '/'):
+                os.remove(UserInputs.CITY_PATH + city + '/' + file)
 
-    print('photos successfully deleted')
+        print('Photos successfully deleted')
+
+    except OSError as err:
+        print("OS error: {0}".format(err))
+    except ValueError:
+        print("Could not delete photos.")
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        raise
 
 
 # main function
 if __name__ == '__main__':
 
-    delete_photos()
+    # delete_photos(city="Stockton")
 
-    all_columns = UserInputs.DEFAULT_COLUMNS + ['Albedo', 'Roofs (mi^2)', 'Greenery (%)']
+    all_columns = UserInputs.DEFAULT_COLUMNS + ['Albedo', 'Roofs (mi^2)', 'Greenery (%)', 'Trees (%)', 'Area Calculated (%)']
 
     data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
 
@@ -51,26 +65,27 @@ if __name__ == '__main__':
     data.add_city_values('Stockton')
     # data.add_city_values('Dallas')
 
-
-    stockton = City('Stockton', [37.9577, -121.2908], 10, data.df, data.return_row("Stockton"))
+    stockton = City('Stockton', [37.9577, -121.2908], 3, data.df, data.return_row("Stockton"))
 
     for i in range(1):
-        stockton.find_raw_images(stockton.batch_size, new_images=False)
-        # stockton.find_raw_images(stockton.batch_size)
+
+        # stockton.find_raw_images(stockton.batch_size, new_images=False)
+        stockton.find_raw_images(stockton.batch_size)
 
         # stockton.crop_images()
+        stockton.calculate_albedo()
         stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
         stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
         stockton.find_greenery()
-        stockton.alter_images()
+        stockton.alter_images(contrast=False)
         stockton.find_roofs()
         stockton.calculate_roofs()
+        stockton.calculate_trees()
         # stockton.find_contours()
         stockton.percent_green()
         stockton.integrate(data.df)
 
         # delete_photos()
 
-    print(stockton.percentAreaCovered)
     data.print_df()
     # data.write_excel()

@@ -26,6 +26,8 @@ class UserInputs():
     GRAY_IMG_PATH = PATH + 'images/analysis/gray/'
     ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/raw/'
     FINAL_ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/final/'
+    TREES_IMG_PATH = PATH + 'images/analysis/trees/'
+    CITY_PATH = PATH + 'images/cities/'
 
     # default URL for website with data on US cities
     DEFAULT_SCRAPING_URL = 'https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population'

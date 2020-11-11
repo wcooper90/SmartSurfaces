@@ -8,8 +8,7 @@ class UserInputs():
     text-summarization techniques to use, and parameters to specify output
     form and type.
     """
-    # globals
-    NUM_IMAGES = 3
+    # image globals
     DEFAULT_HEIGHT = 640
     DEFAULT_WIDTH = 640
     DEFAULT_IMAGE_TYPE = '.PNG'
@@ -54,8 +53,11 @@ class UserInputs():
     # coordinates accuracy, round to how many decimals
     ZOOM_DECIMALS = 6
 
-    # City coordinates
-    COORDS = {"Boston": [42.3613, -71.0889, 42.3314, -71.0324]}
-
     # brightness increase for roof finding
-    BRIGHTNESS_INCREASE = 1.5
+    BRIGHTNESS_INCREASE = 0.9
+
+    # contrast increase for roof finding
+    CONTRAST_INCREASE = 2.5
+
+    # sharpness increase for roof finding
+    SHARPNESS_INCREASE = 1.3

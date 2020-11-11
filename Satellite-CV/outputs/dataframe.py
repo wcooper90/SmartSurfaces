@@ -15,8 +15,11 @@ class DF():
     cannot.
 
     Main functions:
-    add_city_values; write_excel; remove_excel; print_df; add_calculated_city;
+    add_city_values; write_excel; remove_excel; print_df;
     remove_city
+
+    Helper functions:
+    return_row
 
     Note: add_city_values adds web scraped values to the dataframe, and
     add_calculated_city pulls calculated values (such as albedo, greenery)

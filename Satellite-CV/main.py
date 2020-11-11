@@ -1,7 +1,7 @@
 import cv2
 import pandas
 import numpy as np
-import ee
+from tqdm import tqdm
 import os
 import random, sys
 from src.city import City
@@ -52,40 +52,35 @@ def delete_photos(city = None):
 # main function
 if __name__ == '__main__':
 
-    # delete_photos(city="Stockton")
-
     all_columns = UserInputs.DEFAULT_COLUMNS + ['Albedo', 'Roofs (mi^2)', 'Greenery (%)', 'Trees (%)', 'Area Calculated (%)']
 
     data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
 
-    # data.add_city_values('Boston')
-    # data.add_city_values('Cambridge')
-    # data.add_city_values('New Haven')
-    # data.add_city_values('Houston')
     data.add_city_values('Stockton')
-    # data.add_city_values('Dallas')
+
 
     stockton = City('Stockton', [37.9577, -121.2908], 3, data.df, data.return_row("Stockton"))
 
-    for i in range(1):
 
+
+    for i in tqdm(range(5)):
+
+        delete_photos(city="Stockton")
         # stockton.find_raw_images(stockton.batch_size, new_images=False)
         stockton.find_raw_images(stockton.batch_size)
-
         # stockton.crop_images()
         stockton.calculate_albedo()
         stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
         stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
         stockton.find_greenery()
-        stockton.alter_images(contrast=False)
+        stockton.alter_images(otsu=False, sharpen=False, brighten=False)
         stockton.find_roofs()
         stockton.calculate_roofs()
         stockton.calculate_trees()
         # stockton.find_contours()
         stockton.percent_green()
-        stockton.integrate(data.df)
 
-        # delete_photos()
-
+    stockton.integrate(data.df)
     data.print_df()
+    
     # data.write_excel()

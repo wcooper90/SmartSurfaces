@@ -14,7 +14,6 @@ from deepforest import deepforest
 from deepforest import get_data
 import tqdm
 import time
-from src.shapedetector import ShapeDetector
 import PIL
 from PIL import Image, ImageFilter, ImageFile, ImageEnhance
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -40,7 +39,7 @@ class City():
 
     """
 
-    def __init__(self, name, coords, num_images, df, column):
+    def __init__(self, name, coords, num_images, df, row):
 
         self.name = name
         self.coords = coords
@@ -50,24 +49,25 @@ class City():
         self.contoured = None
         self.contours = 0
         self.albedo = 0
-        self.albedo_calculations = 0
+        self.iterations = -1
+        self.treeCounter = 0
         self.treeArea = 0
         self.treePixels = 0
         self.percentTrees = None
         self.roofCounter = 0
         self.roofArea = 0
         self.roofPixels = 0
-        self.percentGreen = None
+        self.percentGreen = 0
         self.areaCovered = 0
         self.percentAreaCovered = 0
-        self.column = column
-        self.latitude = float(df["Location"][self.column][0])
-        self.longitude = float(df["Location"][self.column][1])
+        self.row = row
+        self.latitude = float(df["Location"][self.row][0])
+        self.longitude = float(df["Location"][self.row][1])
         self.feetPerPixel = calculate_area(self.latitude)
         self.tileArea = self.feetPerPixel * UserInputs.DEFAULT_HEIGHT * UserInputs.DEFAULT_WIDTH
 
         try:
-            self.area = float(df["Area (mi^2)"][self.column])
+            self.area = float(df["Area (mi^2)"][self.row])
             if not self.area:
                 print("Area has not been found for city of " + self.name)
             else:
@@ -83,6 +83,9 @@ class City():
 
 
     def find_raw_images(self, num, new_images=True, replacement=False, file=None):
+
+        self.iterations += 1
+
         maxX = self.coords[0] + UserInputs.CITY_MARGINS
         maxY = self.coords[1] + UserInputs.CITY_MARGINS
         minX = self.coords[0] - UserInputs.CITY_MARGINS
@@ -146,7 +149,10 @@ class City():
                 albedo_sum += brightness / brightest_pixel * standard_albedo
 
         albedo = albedo_sum / num
-        self.albedo = (self.albedo_calculations * self.albedo + albedo) / (self.albedo_calculations + 1)
+        self.albedo = (self.iterations * self.albedo + albedo) / (self.iterations + 1)
+        print(self.albedo)
+        self.images_brightness = 0
+        self.images_covered_b = 0
 
         print("_____________ALBEDO CALCULATED____________")
 
@@ -201,8 +207,15 @@ class City():
             green = np.zeros_like(im, np.uint8)
             green[imask] = im[imask]
 
-            ## save
-            cv2.imwrite(UserInputs.GREEN_IMG_PATH + file, green)
+            if np.array_equal(green, im):
+                print('Image discarded')
+                self.areaCovered -= self.tileArea
+                self.batch_size -= 1
+                self.percentAreaCovered = self.areaCovered / self.area * 100
+
+            else:
+                ## save
+                cv2.imwrite(UserInputs.GREEN_IMG_PATH + file, green)
         print("____________GREEN IMAGES FOUND____________")
 
 
@@ -226,7 +239,9 @@ class City():
             counter += 1
             percentages.append(green_percentage)
 
-        self.percentGreen = sum(percentages) / counter
+        percent = sum(percentages) / counter
+
+        self.percentGreen = (self.percentGreen * self.iterations  + percent) / (self.iterations + 1)
 
         print('______' + str(self.name) + ' is ' + str(round(self.percentGreen, 5)) + '% green______')
 
@@ -234,6 +249,8 @@ class City():
     def calculate_trees(self):
 
         for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
+
+            im = cv2.imread(UserInputs.GREEN_IMG_PATH + file)
 
             test_model = deepforest.deepforest()
             test_model.use_release()
@@ -252,9 +269,12 @@ class City():
 
 
             for box in boxes2.iterrows():
-                x = float(box[1]['xmax']) - float(box[1]['xmin'])
-                y = float(box[1]['ymax']) - float(box[1]['ymin'])
-                self.treePixels += x * y
+
+                roi = im[int(box[1]['ymin']):int(box[1]['ymax']), int(box[1]['xmin']):int(box[1]['xmax'])]
+                im2 = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                self.treePixels += cv2.countNonZero(im2)
+                # cv2.imwrite(UserInputs.FINAL_TREES_IMG_PATH + str(self.treeCounter) + ".PNG", roi)
+                self.treeCounter += 1
 
             # Show image, matplotlib expects RGB channel order, but keras-retinanet predicts in BGR
             plt.imshow(boxes1[...,::-1])
@@ -262,11 +282,14 @@ class City():
 
             plt.savefig(UserInputs.TREES_IMG_PATH + file)
 
+        # for i, file in enumerate(os.listdir(UserInputs.FINAL_TREES_IMG_PATH)):
+        #     im = cv2.imread(UserInputs.FINAL_TREES_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
+        #     self.treePixels += cv2.countNonZero(im)
 
         self.treeArea = self.treePixels * self.feetPerPixel
         self.percentTrees = self.treeArea / self.areaCovered * 100
-        print(self.treeArea)
-        print(self.areaCovered)
+        # print(self.treeArea)
+        # print(self.areaCovered)
         print("_____________TREE AREAS FOUND_____________")
 
 
@@ -285,12 +308,6 @@ class City():
             im = cv2.imread(path + file)
             new_image = self.remove_color_helper(low_threshold, high_threshold, path + file)
 
-            # if the greened image is the same as original, find a new raw image
-            while np.array_equal(new_image, im):
-                print('helo')
-                self.find_raw_images(1, replacement=True, file=file)
-                new_image = self.remove_color_helper(low_threshold, high_threshold, path + file)
-
             ## save
             cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, new_image)
         print("__________COLOR REMOVAL COMPLETE__________")
@@ -300,11 +317,7 @@ class City():
         im = cv2.imread(file)
         hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
-        ## mask of green (36,25,25) ~ (86, 255,255)
-        # mask = cv2.inRange(hsv, (36, 25, 25), (86, 255,255))
-        # can be changed depending on the environment
         mask = cv2.inRange(hsv, low_threshold, high_threshold)
-        ## slice the green
         imask = mask>0
         color = np.zeros_like(im, np.uint8)
         color[imask] = im[imask]
@@ -314,36 +327,37 @@ class City():
         return new_image
 
 
-
-    def alter_images(self, sharpen=True, contrast=True, brighten=True, grayscale=False):
+    def alter_images(self, sharpen=True, contrast=True, brighten=True, grayscale=False, otsu=True):
         for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
 
             if contrast:
+                brightness = self.brightness(UserInputs.ALTERED_IMG_PATH + file)
+                contrast_increase = 0.00025 * (brightness - 150) ** 2 + 1
                 imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
-
                 enhancer = ImageEnhance.Contrast(imageObject)
-
-                factor = 1.2 #increase contrast
+                factor = contrast_increase # increase contrast
                 im_output = enhancer.enhance(factor)
-                im_output.save('more-contrast-image.png')
                 im_output.save(UserInputs.ALTERED_IMG_PATH + file)
 
             # sharpen image
             if sharpen:
                 imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
                 enhancer = ImageEnhance.Sharpness(imageObject)
-                factor = 2
+                factor = UserInputs.SHARPNESS_INCREASE
                 im_output = enhancer.enhance(factor)
                 im_output.save(UserInputs.ALTERED_IMG_PATH + file)
-                # img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
-                # img = sharp(img)
-                # cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, img)
 
             if brighten:
                 imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
                 enhancer = ImageEnhance.Brightness(imageObject)
                 enhanced_im = enhancer.enhance(UserInputs.BRIGHTNESS_INCREASE)
                 enhanced_im.save(UserInputs.ALTERED_IMG_PATH + file)
+
+            if otsu:
+                img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
+                blur = cv2.GaussianBlur(img,(5,5),0)
+                _, fix  = cv2.threshold(blur,127,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, fix)
 
             if grayscale:
                 img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
@@ -365,21 +379,15 @@ class City():
                             cv2.CHAIN_APPROX_SIMPLE)
 
             rects = []
-
             for cnt in contours:
-
-
                 rect = cv2.boundingRect(cnt)
-
-                if rect[2] > 250 or rect[3] > 250 or rect[2] < 30 or rect[3] < 30:
+                if rect[2] > 300 or rect[3] > 300 or rect[2] < 30 or rect[3] < 30:
                     continue
                 elif rect[2] > 3 * rect[3] or rect[3] > 3 * rect[2]:
                     continue
 
                 rects.append(rect)
-
                 x,y,w,h = rect
-
                 area = cv2.contourArea(cnt)
 
                 # Shortlisting the regions based on there area.
@@ -444,10 +452,10 @@ class City():
 
     # input data into city dataframe
     def integrate(self, df):
-        df['Albedo'][self.column] = self.albedo
-        df['Greenery (%)'][self.column] = self.percentGreen
-        df['Roofs (mi^2)'][self.column] = self.roofArea
-        df['Trees (%)'][self.column] = self.percentTrees
-        df['Area Calculated (%)'][self.column] = self.percentAreaCovered
+        df['Albedo'][self.row] = self.albedo
+        df['Greenery (%)'][self.row] = self.percentGreen
+        df['Roofs (mi^2)'][self.row] = self.roofArea
+        df['Trees (%)'][self.row] = self.percentTrees
+        df['Area Calculated (%)'][self.row] = self.percentAreaCovered
 
         print("----------------" + self.name.upper() + " DATA INTEGRATED---------------")

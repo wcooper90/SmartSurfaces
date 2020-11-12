@@ -1,4 +1,3 @@
-import ee
 import sys
 import os
 import urllib.request

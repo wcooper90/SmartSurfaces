@@ -2,8 +2,6 @@
 - make sure roofs don't overlap too much
 - shapefiles for cities, to determine if the random generated points are actually in the city?
 - confirm local albedo calculation accuracy
-- otsu's binarization on altered images
 - fix functions which find another raw image if the first one is all green
-- save boxes around trees, only count green
 - do a longer run on Stockton
 - do a long run on DC and compare to analytic engine numbers

@@ -1,0 +1,4 @@
+- for deepforest (tree finding neural network model) to work, h5py version must be < 3.0.0
+- albedo calculation is done based on this article:
+  http://albedodreams.info/how_to/how-to-calculate-albedo-yourself/#:~:text=The%20albedo%20is%20calculated%20as,white%20paper's%20known%20albedo%20value
+- specifics of the albedo calculation can be changed in the calculate_albedo() function in city.py

@@ -20,7 +20,7 @@ def create_images(areas, image_nums, path):
 
     for i in range(length):
 
-        random.seed(areas[i][1])
+        random.seed(i + UserInputs.RANDOM_SEED)
         secs = random.randint(0, 3)
 
         try:
@@ -34,12 +34,12 @@ def create_images(areas, image_nums, path):
             time.sleep(secs)
 
 
-def random_areas(maxX, maxY, minX, minY, num):
+def random_areas(maxX, maxY, minX, minY, num, seed):
     # random seed created from coords
-    random.seed(maxX * round(random.uniform(minY, maxY), 5))
 
     areas = []
     for i in range(num):
+        random.seed(seed + UserInputs.RANDOM_SEED + i)
         areas.append([round(random.uniform(minX, maxX), UserInputs.ZOOM_DECIMALS), round(random.uniform(minY, maxY), UserInputs.ZOOM_DECIMALS)])
     print("__________CITY IMAGES RANDOMIZED__________")
     return areas

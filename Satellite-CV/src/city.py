@@ -5,6 +5,9 @@ from UserInputs import UserInputs
 from .create_images import mkdir, create_images, random_areas
 from .misc_functions import sharp, calculate_area
 import matplotlib.pyplot as plt
+import skimage.measure
+from skimage.filters.rank import entropy
+from skimage.morphology import disk
 import cv2
 import pandas
 import numpy as np
@@ -44,8 +47,6 @@ class City():
         self.name = name
         self.coords = coords
         self.batch_size = num_images
-        self.images_covered_b = 0
-        self.images_brightness = 0
         self.contoured = None
         self.contours = 0
         self.albedo = 0
@@ -65,6 +66,7 @@ class City():
         self.longitude = float(df["Location"][self.row][1])
         self.feetPerPixel = calculate_area(self.latitude)
         self.tileArea = self.feetPerPixel * UserInputs.DEFAULT_HEIGHT * UserInputs.DEFAULT_WIDTH
+        print(self.tileArea / UserInputs.SMILES_TO_SFEET)
 
         try:
             self.area = float(df["Area (mi^2)"][self.row])
@@ -93,7 +95,11 @@ class City():
 
         if new_images:
 
-            areas = random_areas(maxX, maxY, minX, minY, num)
+            random = self.iterations * self.batch_size + UserInputs.RANDOM_SEED - 32
+            print("random seed: " + str(random))
+            areas = random_areas(maxX, maxY, minX, minY, num, random)
+            for area in areas:
+                print(area)
 
             assert(self.images_path is not None)
 
@@ -134,25 +140,26 @@ class City():
         for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
 
             brightness = self.brightness(UserInputs.RAW_IMG_PATH + file)
-            self.images_brightness += brightness
-            self.images_covered_b += 1
 
             brightest_pixel = self.brightest(UserInputs.RAW_IMG_PATH + file)
 
-            if brightest_pixel > 240:
-                albedo_sum += brightness / brightest_pixel * 0.65
+            # change standard albedo of office paper from 0.65 to 0.57 to
+            # account for some images not getting as much light as others
+            if brightest_pixel > 253:
+                albedo_sum += brightness / brightest_pixel * 0.57
             else:
-                difference = 240 - brightest_pixel
-                standard_albedo = 0.65 - 0.01 * difference
+                difference = 253 - brightest_pixel
+                standard_albedo = 0.6 - 0.02 * difference
+                print('lower albedo')
                 if standard_albedo < 0.15:
                     standard_albedo =  0.15
+                    print('lowest albedo')
                 albedo_sum += brightness / brightest_pixel * standard_albedo
+                print(brightness / brightest_pixel * standard_albedo)
 
         albedo = albedo_sum / num
         self.albedo = (self.iterations * self.albedo + albedo) / (self.iterations + 1)
-        print(self.albedo)
-        self.images_brightness = 0
-        self.images_covered_b = 0
+
 
         print("_____________ALBEDO CALCULATED____________")
 
@@ -248,12 +255,23 @@ class City():
 
     def calculate_trees(self):
 
+        length = len(os.listdir(UserInputs.RAW_IMG_PATH))
+
         for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
+
+            random.seed(i + UserInputs.RANDOM_SEED)
+            secs = random.randint(0, 3)
 
             im = cv2.imread(UserInputs.GREEN_IMG_PATH + file)
 
             test_model = deepforest.deepforest()
-            test_model.use_release()
+
+            # sometimes there are too many calls to the model, so image is just discarded
+            try:
+                test_model.use_release()
+            except:
+                print('tree image discarded')
+                continue
 
             image_path = get_data(UserInputs.GREEN_IMG_PATH + file)
 
@@ -274,7 +292,8 @@ class City():
                 im2 = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
                 self.treePixels += cv2.countNonZero(im2)
                 # cv2.imwrite(UserInputs.FINAL_TREES_IMG_PATH + str(self.treeCounter) + ".PNG", roi)
-                self.treeCounter += 1
+
+            self.treeCounter += 1
 
             # Show image, matplotlib expects RGB channel order, but keras-retinanet predicts in BGR
             plt.imshow(boxes1[...,::-1])
@@ -282,12 +301,20 @@ class City():
 
             plt.savefig(UserInputs.TREES_IMG_PATH + file)
 
+            if i != length:
+                time.sleep(secs)
+
+            # break
+
         # for i, file in enumerate(os.listdir(UserInputs.FINAL_TREES_IMG_PATH)):
         #     im = cv2.imread(UserInputs.FINAL_TREES_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
         #     self.treePixels += cv2.countNonZero(im)
 
         self.treeArea = self.treePixels * self.feetPerPixel
-        self.percentTrees = self.treeArea / self.areaCovered * 100
+        try:
+            self.percentTrees = self.treeArea / (self.treeCounter * self.tileArea) * 100
+        except:
+            self.percentTress = None
         # print(self.treeArea)
         # print(self.areaCovered)
         print("_____________TREE AREAS FOUND_____________")
@@ -330,9 +357,12 @@ class City():
     def alter_images(self, sharpen=True, contrast=True, brighten=True, grayscale=False, otsu=True):
         for i, file in enumerate(os.listdir(UserInputs.RAW_IMG_PATH)):
 
+
+            # contrast
             if contrast:
                 brightness = self.brightness(UserInputs.ALTERED_IMG_PATH + file)
-                contrast_increase = 0.00025 * (brightness - 150) ** 2 + 1
+                contrast_increase = 0.00013 * (brightness - 150) ** 2 + 1.1
+                print("contrast_increase = " + str(contrast_increase))
                 imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
                 enhancer = ImageEnhance.Contrast(imageObject)
                 factor = contrast_increase # increase contrast
@@ -347,18 +377,21 @@ class City():
                 im_output = enhancer.enhance(factor)
                 im_output.save(UserInputs.ALTERED_IMG_PATH + file)
 
+            # brighten
             if brighten:
                 imageObject = Image.open(UserInputs.ALTERED_IMG_PATH + file)
                 enhancer = ImageEnhance.Brightness(imageObject)
                 enhanced_im = enhancer.enhance(UserInputs.BRIGHTNESS_INCREASE)
                 enhanced_im.save(UserInputs.ALTERED_IMG_PATH + file)
 
+            # otsu's binarization
             if otsu:
                 img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file, cv2.IMREAD_GRAYSCALE)
                 blur = cv2.GaussianBlur(img,(5,5),0)
                 _, fix  = cv2.threshold(blur,127,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                 cv2.imwrite(UserInputs.ALTERED_IMG_PATH + file, fix)
 
+            # grayscale
             if grayscale:
                 img = cv2.imread(UserInputs.ALTERED_IMG_PATH + file)
                 gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
@@ -381,7 +414,7 @@ class City():
             rects = []
             for cnt in contours:
                 rect = cv2.boundingRect(cnt)
-                if rect[2] > 300 or rect[3] > 300 or rect[2] < 30 or rect[3] < 30:
+                if rect[2] > UserInputs.MAX_WIDTH_LENGTH or rect[3] > UserInputs.MAX_WIDTH_LENGTH or rect[2] < UserInputs.MIN_WIDTH_LENGTH or rect[3] < UserInputs.MIN_WIDTH_LENGTH:
                     continue
                 elif rect[2] > 3 * rect[3] or rect[3] > 3 * rect[2]:
                     continue
@@ -391,15 +424,13 @@ class City():
                 area = cv2.contourArea(cnt)
 
                 # Shortlisting the regions based on there area.
-                if area > 800 and area < 15000:
-                    approx = cv2.approxPolyDP(cnt,
-                                              0.008 * cv2.arcLength(cnt, True), True)
+                # if area > 800 and area < 15000:
+                #     approx = cv2.approxPolyDP(cnt,
+                #                               0.008 * cv2.arcLength(cnt, True), True)
 
                     # Checking if the no. of sides of the selected region is 7.
                     # if(len(approx) >= 4):
                     # cv2.drawContours(im2, [approx], 0, (40, 10, 255), 3)
-
-                cv2.rectangle(im2,(x,y),(x+w,y+h),(0,255,0),2)
 
             im3 = cv2.imread(UserInputs.RAW_IMG_PATH + file)
             for rect in rects:
@@ -409,7 +440,14 @@ class City():
                 cv2.imwrite(UserInputs.ROOFS_IMG_PATH + str(self.roofCounter) + ".PNG", roi2)
                 blur = cv2.GaussianBlur(roi1,(5,5),0)
                 _, fix  = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                cv2.imwrite(UserInputs.FINAL_ROOFS_IMG_PATH + str(self.roofCounter) + ".PNG", fix)
+                blur2 = cv2.GaussianBlur(fix, (3,3),0)
+                array = np.asarray(blur2)
+                entr_img = entropy(array, disk(10))
+                if np.average(entr_img) <= UserInputs.MAX_ENTROPY:
+                    cv2.imwrite(UserInputs.FINAL_ROOFS_IMG_PATH + str(self.roofCounter) + ".PNG", blur2)
+                    cv2.rectangle(im2,(x,y),(x+w,y+h),(0,255,40),2)
+                # else:
+                #     print('image ' + str(self.roofCounter) + ': ' + str(np.average(entr_img)))
                 self.roofCounter += 1
 
             ## save

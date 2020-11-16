@@ -14,8 +14,7 @@ class UserInputs():
     DEFAULT_IMAGE_TYPE = '.PNG'
 
     # standard folder path
-    PATH = '/mnt/c/Users/wcoop/OneDrive/Desktop/SSC/Satellite-CV/'
-
+    PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/'
     # image paths
     RAW_IMG_PATH = PATH + 'images/analysis/raw/'
     CROPPED_IMG_PATH = PATH + 'images/analysis/cropped/'
@@ -39,25 +38,35 @@ class UserInputs():
     DEFAULT_COLUMNS = ['City', 'Population', 'Area (mi^2)', 'Location']
 
     # HSV values for color removal
-    LOW_YELLOW = (10, 10, 10)
+    # LOW_YELLOW = (10, 10, 10)
+    # HIGH_YELLOW = (45, 80, 170)
+    # LOW_GREEN = (45, 20, 10)
+    # HIGH_GREEN = (95, 255, 250)
+
+    LOW_YELLOW = (12, 25, 20)
     HIGH_YELLOW = (60, 150, 250)
-    LOW_GREEN = (25, 0, 0)
-    HIGH_GREEN = (100, 255, 250)
+    LOW_GREEN = (25, 5, 0)
+    HIGH_GREEN = (95, 250, 240)
 
     # margins of city coordinates, so can determine where to take images from
-    CITY_MARGINS = 0.06
-
+    CITY_MARGINS = 0.057
     # default zoom for the google maps downloader
     DEFAULT_ZOOM = str(19)
-
     # coordinates accuracy, round to how many decimals
     ZOOM_DECIMALS = 6
 
-    # brightness increase for roof finding
-    BRIGHTNESS_INCREASE = 0.9
-
-    # contrast increase for roof finding
+    # brightness, contrast, sharpness increase for roof finding
+    BRIGHTNESS_INCREASE = 1.2
     CONTRAST_INCREASE = 2.5
+    SHARPNESS_INCREASE = 1.2
 
-    # sharpness increase for roof finding
-    SHARPNESS_INCREASE = 1.3
+    # random number for anything in the script that needs randomness
+    RANDOM_SEED = 157
+
+    # threshold for biggest and smallest roofs allowed (in pixels)
+    MAX_WIDTH_LENGTH = 400
+    MIN_WIDTH_LENGTH = 30
+
+    # Entropy threshold, increased for El Paso, decreased for Stockton
+    MAX_ENTROPY = 1.92
+    # MAX_ENTROPY = 1.95

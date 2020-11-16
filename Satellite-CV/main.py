@@ -58,29 +58,33 @@ if __name__ == '__main__':
 
     data.add_city_values('Stockton')
 
+    # el paso coordinates: 31.7619, -106.4850
+    # stockon coordinates: 37.9577, -121.2908
+    stockton = City('Stockton', [37.9577, -121.2908], 5, data.df, data.return_row("Stockton"))
 
-    stockton = City('Stockton', [37.9577, -121.2908], 3, data.df, data.return_row("Stockton"))
 
-
-
-    for i in tqdm(range(5)):
+    for i in tqdm(range(3)):
 
         delete_photos(city="Stockton")
-        # stockton.find_raw_images(stockton.batch_size, new_images=False)
-        stockton.find_raw_images(stockton.batch_size)
-        # stockton.crop_images()
-        stockton.calculate_albedo()
-        stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
-        stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
-        stockton.find_greenery()
-        stockton.alter_images(otsu=False, sharpen=False, brighten=False)
-        stockton.find_roofs()
-        stockton.calculate_roofs()
-        stockton.calculate_trees()
-        # stockton.find_contours()
-        stockton.percent_green()
+        # # stockton.find_raw_images(stockton.batch_size, new_images=False)
+        # stockton.find_raw_images(stockton.batch_size)
+        # # stockton.crop_images()
+        # stockton.calculate_albedo()
+        # stockton.find_greenery()
+        # stockton.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
+        # stockton.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
+        # stockton.alter_images(otsu=False, sharpen=False)
+        #
+        # stockton.find_roofs()
+        # stockton.calculate_roofs()
+        # stockton.calculate_trees()
+        # # stockton.find_contours()
+        # stockton.percent_green()
+        #
+        # stockton.integrate(data.df)
+        # data.print_df()
 
-    stockton.integrate(data.df)
-    data.print_df()
-    
     # data.write_excel()
+
+
+# results for El Paso should be: 21.583 miles of roofing, ~5% tree coverage, albedo in the low to mid 20s

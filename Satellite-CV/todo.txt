@@ -1,7 +1,17 @@
 - make sure random sample of images don't overlap
 - make sure roofs don't overlap too much
 - shapefiles for cities, to determine if the random generated points are actually in the city?
-- confirm local albedo calculation accuracy
 - fix functions which find another raw image if the first one is all green
-- do a longer run on Stockton
-- do a long run on DC and compare to analytic engine numbers
+- change tree detection algorithm - sharpen, save as transparent? canny edge detection?
+  - normalize the set of images (brightness and contrast)
+  - polygon approximation and rectangles
+  - calculate entropy, contrast, and brightness of trees
+  - create series of conditional statements
+  - align for Stockton, then test on other cities
+- do a run on Baltimore
+- make calibrate() function, to adjust images depending on location in the U.S. 
+
+
+https://ui.adsabs.harvard.edu/abs/2016AGUFM.H11H..07T/abstract
+
+calibration for albedo ^

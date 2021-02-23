@@ -24,8 +24,10 @@ class UserInputs():
     GRAY_IMG_PATH = PATH + 'images/analysis/gray/'
     ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/raw/'
     FINAL_ROOFS_IMG_PATH = PATH + 'images/analysis/roofs/final/'
-    TREES_IMG_PATH = PATH + 'images/analysis/trees/'
+    TREES_IMG_PATH = PATH + 'images/analysis/trees/final/'
+    TREES_RAW_PATH = PATH + 'images/analysis/trees/raw/'
     CITY_PATH = PATH + 'images/cities/'
+
 
     # default URL for website with data on US cities
     DEFAULT_SCRAPING_URL = 'https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population'
@@ -43,30 +45,38 @@ class UserInputs():
     # LOW_GREEN = (45, 20, 10)
     # HIGH_GREEN = (95, 255, 250)
 
-    LOW_YELLOW = (12, 25, 20)
-    HIGH_YELLOW = (60, 150, 250)
-    LOW_GREEN = (25, 5, 0)
-    HIGH_GREEN = (95, 250, 240)
+    LOW_YELLOW = (10, 20, 30)
+    HIGH_YELLOW = (60, 150, 220)
+    LOW_GREEN = (24, 0, 0)
+    HIGH_GREEN = (100, 250, 240)
+
+    # LOW_YELLOW = (10, 10, 12)
+    # HIGH_YELLOW = (60, 150, 220)
+    # LOW_GREEN = (24, 0, 0)
+    # HIGH_GREEN = (96, 240, 220)
 
     # margins of city coordinates, so can determine where to take images from
-    CITY_MARGINS = 0.057
+    CITY_MARGINS = 0.01
     # default zoom for the google maps downloader
-    DEFAULT_ZOOM = str(19)
+    DEFAULT_ZOOM = str(20)
     # coordinates accuracy, round to how many decimals
     ZOOM_DECIMALS = 6
 
     # brightness, contrast, sharpness increase for roof finding
-    BRIGHTNESS_INCREASE = 1.2
+    BRIGHTNESS_INCREASE = 0.95
     CONTRAST_INCREASE = 2.5
-    SHARPNESS_INCREASE = 1.2
+    SHARPNESS_INCREASE = 1.1
 
     # random number for anything in the script that needs randomness
-    RANDOM_SEED = 157
+    RANDOM_SEED = 36558
 
     # threshold for biggest and smallest roofs allowed (in pixels)
-    MAX_WIDTH_LENGTH = 400
+    MAX_WIDTH_LENGTH = 450
     MIN_WIDTH_LENGTH = 30
+    MAX_TREE_LENGTH = 450
+    MIN_TREE_LENGTH = 10
 
     # Entropy threshold, increased for El Paso, decreased for Stockton
-    MAX_ENTROPY = 1.92
+    MAX_ENTROPY = 2.7
+    MIN_ENTROPY = 0.6
     # MAX_ENTROPY = 1.95

@@ -26,7 +26,7 @@ def create_images(areas, image_nums, path):
 
         try:
             # Get the high resolution image
-            img = urllib.request.urlretrieve("http://maps.googleapis.com/maps/api/staticmap?center=" + str(areas[i][0]) + ","+ str(areas[i][1]) + "&zoom=" + UserInputs.DEFAULT_ZOOM + "&size=640x640&sensor=false&maptype=satellite&key=AIzaSyDFah1Ze4pyNKWqXv9-FDhxXmGesKiL1Lg&v=3", path + str(image_nums[i]) + ".PNG")
+            img = urllib.request.urlretrieve("http://maps.googleapis.com/maps/api/staticmap?center=" + str(areas[i][0]) + ","+ str(areas[i][1]) + "&zoom=" + UserInputs.DEFAULT_ZOOM + "&size=640x640&sensor=false&maptype=satellite&key=##APIKEYHERE##&v=3", path + str(image_nums[i]) + ".PNG")
 
         except IOError:
             print("Could not generate the image!")

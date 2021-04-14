@@ -22,8 +22,7 @@ def scrape_city(city, columns, url):
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
 
-    info = soup.find_all('table')[4].find('tbody')
-
+    info = soup.find_all('table')[5].find('tbody')
 
     city_not_found = True
     for row in info:

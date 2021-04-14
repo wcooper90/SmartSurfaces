@@ -1,9 +1,9 @@
 import sys
 import os
-sys.path.append(os.path.abspath('../'))
+sys.path.append(os.path.abspath('../../'))
 from UserInputs import UserInputs
-from .create_images import mkdir, create_images, random_areas
-from .misc_functions import sharp, calculate_area
+from src.create_images import mkdir, create_images, random_areas
+from src.misc_functions import sharp, calculate_area
 import matplotlib.pyplot as plt
 import skimage.measure
 from skimage.filters.rank import entropy
@@ -84,6 +84,10 @@ class City():
         # make sure path is created
         path = mkdir(self.name)
         self.images_path = path
+
+
+    def print_line(self):
+        print("-" * 100)
 
 
     def find_raw_images(self, num, new_images=True, replacement=False, file=None):
@@ -546,7 +550,7 @@ class City():
     # find the and create images with only the roofs of images
     def find_roofs(self):
 
-        # remove the existing photos from final roofs path 
+        # remove the existing photos from final roofs path
         for file in os.listdir(UserInputs.FINAL_ROOFS_IMG_PATH):
             os.remove(UserInputs.FINAL_ROOFS_IMG_PATH + file)
 

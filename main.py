@@ -4,11 +4,11 @@ import numpy as np
 from tqdm import tqdm
 import os
 import random, sys
-from src.city import City
+from src.objects.city import City
 from src.create_images import create_images
 from UserInputs import UserInputs
 from PIL import Image
-from outputs.dataframe import DF
+from src.objects.dataframe import DF
 
 
 # delete all the photos, making room for analysis of new city
@@ -58,7 +58,10 @@ if __name__ == '__main__':
 
     data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
 
+    # cities = {'Baltimore': ['detailed', 'geojson_path']}
+    # non-detailed 
     cities = {'Baltimore': [39.2382, -76.6037]}
+
                 # 'Boston': [42.3601, -71.0589], 'Fresno': [36.7836,-119.7934]
                 # 'El Paso': [31.7619, -106.4850], 'San Diego': [32.8153,-117.135],
                 # 'Columbus': [39.9844,-82.9848], 'Memphis': [35.1028,-89.9774],
@@ -77,28 +80,28 @@ if __name__ == '__main__':
         data.add_city_values(key)
 
         city = City(key, cities[key], 10, data.df, data.return_row(key))
-        delete_photos(city=key)
+        # delete_photos(city=key)
 
-        # for i in tqdm(range(5)):
-        #
-        #     # city.find_raw_images(city.batch_size, new_images=False)
-        #     city.find_raw_images(city.batch_size)
-        #     # city.crop_images()
-        #     city.calculate_albedo()
-        #     city.standardize()
-        #     city.find_greenery()
-        #     city.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
-        #     city.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
-        #     city.alter_images(otsu=False, sharpen=False)
-        #     city.find_roofs()
-        #     city.calculate_roofs()
-        #     # # city.find_trees()
-        #     # city.calculate_trees()
-        #     # # city.find_contours()
-        #     city.percent_green()
-        #     city.integrate(data.df)
-        #
-        #     data.print_df()
+        for i in tqdm(range(1)):
+
+            # city.find_raw_images(city.batch_size, new_images=False)
+            city.find_raw_images(city.batch_size)
+            # city.crop_images()
+            city.calculate_albedo()
+            city.standardize()
+            city.find_greenery()
+            city.remove_color(UserInputs.LOW_GREEN, UserInputs.HIGH_GREEN)
+            city.remove_color(UserInputs.LOW_YELLOW, UserInputs.HIGH_YELLOW)
+            city.alter_images(otsu=False, sharpen=False)
+            city.find_roofs()
+            city.calculate_roofs()
+            # # city.find_trees()
+            # city.calculate_trees()
+            # # city.find_contours()
+            city.percent_green()
+            city.integrate(data.df)
+
+            data.print_df()
 
 
     # data.write_excel()

@@ -14,7 +14,7 @@ class UserInputs():
     DEFAULT_IMAGE_TYPE = '.PNG'
 
     # standard folder path
-    PATH = '/mnt/c/Users/wcoop/Desktop/SSC/Satellite-CV/'
+    PATH = '/mnt/c/Users/wcoop/Desktop/SSC/'
     # image paths
     RAW_IMG_PATH = PATH + 'images/analysis/raw/'
     CROPPED_IMG_PATH = PATH + 'images/analysis/cropped/'
@@ -80,3 +80,8 @@ class UserInputs():
     MAX_ENTROPY = 2.7
     MIN_ENTROPY = 0.6
     # MAX_ENTROPY = 1.95
+
+
+
+    # proportion of analyzed images which are saved for inspection 
+    SAVE_PROPORTION = 0

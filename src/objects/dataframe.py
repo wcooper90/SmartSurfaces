@@ -1,9 +1,12 @@
 import pandas as pd
-from .scrape import scrape_city
+
 import xlsxwriter
 import sys
 import os
-sys.path.append(os.path.abspath('../'))
+sys.path.append(os.path.abspath('../../'))
+from src.scrape import scrape_city
+
+
 from UserInputs import UserInputs
 
 

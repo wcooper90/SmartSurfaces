@@ -9,12 +9,15 @@ import tqdm
 import time
 sys.path.append(os.path.abspath('../'))
 from UserInputs import UserInputs
+from api_keys import API_KEYS
 
 
 def create_images(areas, image_nums, path):
     # Create a new instance of GoogleMap Downloader
 
     assert(len(areas) == len(image_nums))
+
+    key = API_KEYS()
 
     length = len(areas)
 
@@ -26,10 +29,10 @@ def create_images(areas, image_nums, path):
 
         try:
             # Get the high resolution image
-            img = urllib.request.urlretrieve("http://maps.googleapis.com/maps/api/staticmap?center=" + str(areas[i][0]) + ","+ str(areas[i][1]) + "&zoom=" + UserInputs.DEFAULT_ZOOM + "&size=640x640&sensor=false&maptype=satellite&key=##APIKEYHERE##&v=3", path + str(image_nums[i]) + ".PNG")
+            img = urllib.request.urlretrieve("http://maps.googleapis.com/maps/api/staticmap?center=" + str(areas[i][0]) + ","+ str(areas[i][1]) + "&zoom=" + UserInputs.DEFAULT_ZOOM + "&size=640x640&sensor=false&maptype=satellite&key=" + key.maps_static_api + "&v=3", path + str(image_nums[i]) + ".PNG")
 
         except IOError:
-            print("Could not generate the image!")
+            print("Can't generate the image!")
 
         if i != length:
             time.sleep(secs)

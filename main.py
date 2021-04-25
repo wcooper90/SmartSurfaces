@@ -59,7 +59,7 @@ if __name__ == '__main__':
     data = DF(all_columns, UserInputs.DEFAULT_COLUMNS, UserInputs.DEFAULT_SCRAPING_URL)
 
     # cities = {'Baltimore': ['detailed', 'geojson_path']}
-    # non-detailed 
+    # non-detailed
     cities = {'Baltimore': [39.2382, -76.6037]}
 
                 # 'Boston': [42.3601, -71.0589], 'Fresno': [36.7836,-119.7934]

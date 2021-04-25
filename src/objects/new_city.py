@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath('../../'))
 from UserInputs import UserInputs
+from src.objects.image_curator import Image_Curator
 
 
 
@@ -10,9 +11,11 @@ class City():
 
     """
 
-    def __init__(self):
+    def __init__(self, city_name):
+        self.city_name = city_name
         self.images = []
-        pass
+        self.image_curator = None
+        self.max_image_iterations = None
 
 
     def print_line(self):
@@ -21,14 +24,25 @@ class City():
 
     def find_raw_images(self):
         # image_curator object, feed in geojson file path
-        # self.images = image_curator(geojson_path)
-        pass
+        if not self.image_curator:
+            self.image_curator = Image_Curator(self.city_name, UserInputs.DEFAULT_BATCH_SIZE)
+            self.image_curator.control_flow()
+            self.max_image_iterations = min(UserInputs.MAX_IMAGES_ITERATIONS, (self.image_curator.cols * self.image_curator.rows / UserInputs.DEFAULT_BATCH_SIZE))
+        else:
+            print('a')
+            self.image_curator.control_flow()
+            self.images = self.image_curator.images
 
+
+        self.print_line()
 
 
     # control flow for this object, so only have to call once in main
     def control_flow(self):
-        pass
+        self.find_raw_images()
+        for i in range(self.max_image_iterations - 1):
+            self.find_raw_images()
+
 
     # calculate the albedo of an image (LANDSAT strategy)
     def calculate_albedo(batch_num):
@@ -60,7 +74,7 @@ class City():
         pass
 
 
-    # is this needed? 
+    # is this needed?
     def find_contours(self):
         pass
 

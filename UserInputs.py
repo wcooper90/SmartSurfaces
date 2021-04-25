@@ -12,6 +12,8 @@ class UserInputs():
     DEFAULT_HEIGHT = 640
     DEFAULT_WIDTH = 640
     DEFAULT_IMAGE_TYPE = '.PNG'
+    DEFAULT_BATCH_SIZE = 10
+    MAX_IMAGES_ITERATIONS = 3
 
     # standard folder path
     PATH = '/mnt/c/Users/wcoop/Desktop/SSC/'
@@ -58,7 +60,7 @@ class UserInputs():
     # margins of city coordinates, so can determine where to take images from
     CITY_MARGINS = 0.01
     # default zoom for the google maps downloader
-    DEFAULT_ZOOM = str(20)
+    DEFAULT_ZOOM = str(18)
     # coordinates accuracy, round to how many decimals
     ZOOM_DECIMALS = 6
 
@@ -68,7 +70,7 @@ class UserInputs():
     SHARPNESS_INCREASE = 1.1
 
     # random number for anything in the script that needs randomness
-    RANDOM_SEED = 36558
+    RANDOM_SEED = 354
 
     # threshold for biggest and smallest roofs allowed (in pixels)
     MAX_WIDTH_LENGTH = 450
@@ -83,5 +85,5 @@ class UserInputs():
 
 
 
-    # proportion of analyzed images which are saved for inspection 
+    # proportion of analyzed images which are saved for inspection
     SAVE_PROPORTION = 0

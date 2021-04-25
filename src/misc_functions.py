@@ -19,4 +19,4 @@ def sharp(gray):
 
 def calculate_area(lat):
     metersPerPx = 156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, int(UserInputs.DEFAULT_ZOOM))
-    return metersPerPx * UserInputs.SMETERS_TO_SFEET
+    return metersPerPx

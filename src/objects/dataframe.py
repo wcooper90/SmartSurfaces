@@ -5,8 +5,6 @@ import sys
 import os
 sys.path.append(os.path.abspath('../../'))
 from src.scrape import scrape_city
-
-
 from UserInputs import UserInputs
 
 
@@ -49,6 +47,8 @@ class DF():
 
     # web scrape certain values for a specific city, add to dataframe
     def add_city_values(self, city):
+
+        print(city)
 
         num_none_values = len(self.columns) - len(self.scraped_columns)
         non_scraped_columns = [x for x in self.columns if x not in self.scraped_columns]

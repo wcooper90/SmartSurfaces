@@ -29,7 +29,6 @@ class City():
             self.image_curator.control_flow()
             self.max_image_iterations = min(UserInputs.MAX_IMAGES_ITERATIONS, (self.image_curator.cols * self.image_curator.rows / UserInputs.DEFAULT_BATCH_SIZE))
         else:
-            print('a')
             self.image_curator.control_flow()
             self.images = self.image_curator.images
 

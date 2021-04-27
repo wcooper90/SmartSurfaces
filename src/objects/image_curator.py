@@ -69,16 +69,19 @@ class Image_Curator():
         maxsize = 640
 
         # convert all these coordinates to pixels
-        upper_left_x, upper_left_y = self.latlontopixels(upper_left_lat, upper_left_lon, int(zoom))
-        lower_right_x, lower_right_y = self.latlontopixels(lower_right_lat, lower_right_lon, int(zoom))
+        upper_left_y, upper_left_x = self.latlontopixels(upper_left_lat, upper_left_lon, int(zoom))
+        lower_right_y, lower_right_x = self.latlontopixels(lower_right_lat, lower_right_lon, int(zoom))
+        print(self.pixelstolatlon(upper_left_y, upper_left_x, int(zoom)))
 
         # calculate total pixel dimensions of final image
         x_pixels, y_pixels = lower_right_x - upper_left_x, upper_left_y - lower_right_y
 
         # calculate rows and columns
-        cols, rows = int(ceil(x_pixels/maxsize)), int(ceil(y_pixels/maxsize))
+        cols, rows = abs(int(ceil(x_pixels/maxsize))), abs(int(ceil(y_pixels/maxsize)))
         self.cols = cols
         self.rows = rows
+
+        print(cols, rows)
 
         # calculate pixel dimensions of each small image
         largura = UserInputs.DEFAULT_HEIGHT
@@ -89,18 +92,22 @@ class Image_Curator():
         image_counter = 0
         print("x_start: " + str(x_start))
         print("y_start: " + str(y_start))
+
+
+        cutoff = False
         for x in range(x_start, cols):
             if image_counter >= UserInputs.DEFAULT_BATCH_SIZE:
                 break
 
             for y in range(y_start, rows):
                 if image_counter >= UserInputs.DEFAULT_BATCH_SIZE:
+                    cutoff = True
                     break
 
                 # make more accurate
                 dxn = largura * (x) * 4.3
                 dyn = altura * (y) * 4.3
-                latn, lonn = self.pixelstolatlon(upper_left_x + dxn, upper_left_y - dyn, int(zoom))
+                latn, lonn = self.pixelstolatlon(upper_left_y + dyn, upper_left_x - dxn, int(zoom))
 
                 point = geometry.Point(latn, lonn)
                 position = ','.join((str(latn), str(lonn)))
@@ -131,8 +138,12 @@ class Image_Curator():
                 except IOError:
                     print("Couldn't retrieve the image!")
 
-            self.x_start += 1
+
+            if cutoff:
+                break
+
             self.y_start = 0
+            self.x_start += 1
             time.sleep(3)
             print('br')
 
